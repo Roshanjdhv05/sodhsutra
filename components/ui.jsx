@@ -35,15 +35,34 @@ export function Cover({ p, h, cls = '' }) {
 
 export function PaperCard({ p, h, byline }) {
   const href = `/journals/${p.slug}`;
+  const cat = h.cat(p.cat);
+  const authorText = byline || h.authorNames(p);
+  const inst = p.inst || (p.authors && p.authors.length ? h.author(p.authors[0])?.inst : '') || '';
+  const hasInstInByline = byline && inst && byline.toLowerCase().includes(inst.toLowerCase());
+
   return (
     <article className="rcard reveal">
-      <Link className="rcard-link" href={href} aria-label={p.title}><Cover p={p} h={h} /></Link>
-      <div className="rcard-body">
-        <div className="rcard-meta"><span className="chip">{p.type}</span><time dateTime={p.date}>{h.fmt(p.date)}</time></div>
-        {byline ? <p className="rcard-by">{byline}</p> : null}
-        <p className="rcard-abs">{p.abstract}</p>
-        <p className="rcard-inst"><Icon name="building" size={14} /> {p.inst}</p>
-        <Link className="read-link" href={href}>Read Paper <Icon name="arrow" size={16} /></Link>
+      <div className="rcard-head">
+        <span className="rcard-cat">{cat.short || cat.name}</span>
+        <time className="rcard-date" dateTime={p.date}>{h.fmt(p.date)}</time>
+      </div>
+      <h3 className="rcard-title">
+        <Link href={href}>{p.title}</Link>
+      </h3>
+      <div className="rcard-author-info">
+        {authorText ? <p className="rcard-by">{authorText}</p> : null}
+        {inst && !hasInstInByline ? (
+          <p className="rcard-inst">
+            <Icon name="building" size={14} /> {inst}
+          </p>
+        ) : null}
+      </div>
+      <p className="rcard-abs">{p.abstract}</p>
+      <div className="rcard-foot">
+        <span className="rcard-type">{p.type}</span>
+        <Link className="read-link" href={href}>
+          Read Paper <Icon name="arrow" size={16} />
+        </Link>
       </div>
     </article>
   );

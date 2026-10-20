@@ -118,23 +118,102 @@ function AuthorForm({ row, onSave, onClose }) {
   );
 }
 
+function extractSections(text = '') {
+  const sections = {
+    introduction: '',
+    scope_and_approach: '',
+    literature_review: '',
+    discussion: '',
+    conclusion: '',
+    other_sections: '',
+  };
+  if (!text) return sections;
+  const headingRegex = /(?:^|\n)#{1,3}\s+([^\n]+)/g;
+  const matches = [...text.matchAll(headingRegex)];
+  if (!matches.length) {
+    sections.introduction = text.trim();
+    return sections;
+  }
+  matches.forEach((m, idx) => {
+    const rawTitle = m[1].trim();
+    const lower = rawTitle.toLowerCase();
+    const start = m.index + m[0].length;
+    const end = idx + 1 < matches.length ? matches[idx + 1].index : text.length;
+    const content = text.slice(start, end).trim();
+    if (lower.includes('introduction')) {
+      sections.introduction = content;
+    } else if (lower.includes('scope')) {
+      sections.scope_and_approach = content;
+    } else if (lower.includes('literature')) {
+      sections.literature_review = content;
+    } else if (lower.includes('discussion')) {
+      sections.discussion = content;
+    } else if (lower.includes('conclusion')) {
+      sections.conclusion = content;
+    } else {
+      sections.other_sections += (sections.other_sections ? '\n\n' : '') + `## ${rawTitle}\n${content}`;
+    }
+  });
+  return sections;
+}
+
 function PaperForm({ row, data, onSave, onClose }) {
   const n = data.papers.length;
+  const initialSections = extractSections(row?.full_text || '');
   const [f, setF] = useState(() => ({
     title: '', slug: '', abstract: '', category_slug: data.categories[0]?.slug || '', category2_slug: '', authorIds: [], published_on: today(), keywords: '',
-    views: 0, content_type: 'Original Research', format: 'emp', institution: '', featured: false, doi: '', peer_reviewed: false, is_demo: false,
-    paper_url: '', cover_url: '', art_style: (n * 5 + 1) % 8, art_theme: (n * 7 + 2) % 6, art_seed: n + 1, full_text: '', refs_text: '',
-    ...(row ? { ...row, category2_slug: row.category2_slug || '', doi: row.doi || '', paper_url: row.paper_url || '', cover_url: row.cover_url || '', institution: row.institution || '', published_on: String(row.published_on).slice(0, 10), keywords: (row.keywords || []).join(', '), full_text: row.full_text || '', refs_text: (row.refs || []).join('\n') } : {}),
+    views: 0, content_type: 'Original Research', format: 'rev', institution: '', featured: false, doi: '', peer_reviewed: false, is_demo: false,
+    paper_url: '', cover_url: '', art_style: (n * 5 + 1) % 8, art_theme: (n * 7 + 2) % 6, art_seed: n + 1,
+    introduction: initialSections.introduction,
+    scope_and_approach: initialSections.scope_and_approach,
+    literature_review: initialSections.literature_review,
+    discussion: initialSections.discussion,
+    conclusion: initialSections.conclusion,
+    other_sections: initialSections.other_sections,
+    refs_text: '',
+    ...(row ? {
+      ...row,
+      category2_slug: row.category2_slug || '',
+      doi: row.doi || '',
+      paper_url: row.paper_url || '',
+      cover_url: row.cover_url || '',
+      institution: row.institution || '',
+      published_on: String(row.published_on).slice(0, 10),
+      keywords: (row.keywords || []).join(', '),
+      refs_text: (row.refs || []).join('\n'),
+      introduction: initialSections.introduction,
+      scope_and_approach: initialSections.scope_and_approach,
+      literature_review: initialSections.literature_review,
+      discussion: initialSections.discussion,
+      conclusion: initialSections.conclusion,
+      other_sections: initialSections.other_sections,
+    } : {}),
   }));
   const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
   const pick = (id) => setF((s) => ({ ...s, authorIds: s.authorIds.includes(id) ? s.authorIds.filter((x) => x !== id) : [...s.authorIds, id] }));
-  async function submit(e) { e.preventDefault(); setBusy(true); setErr(''); const r = await onSave({ ...f, id: row?.id }); setBusy(false); if (!r.ok) setErr(r.error); }
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setErr('');
+    const parts = [
+      f.introduction?.trim() ? `## Introduction\n${f.introduction.trim()}` : null,
+      f.scope_and_approach?.trim() ? `## Scope and Approach\n${f.scope_and_approach.trim()}` : null,
+      f.literature_review?.trim() ? `## Literature Review\n${f.literature_review.trim()}` : null,
+      f.discussion?.trim() ? `## Discussion\n${f.discussion.trim()}` : null,
+      f.conclusion?.trim() ? `## Conclusion\n${f.conclusion.trim()}` : null,
+      f.other_sections?.trim() ? f.other_sections.trim() : null,
+    ].filter(Boolean);
+    const full_text = parts.join('\n\n');
+    const r = await onSave({ ...f, full_text, id: row?.id });
+    setBusy(false);
+    if (!r.ok) setErr(r.error);
+  }
   return (
     <form onSubmit={submit} noValidate>
       <div className="formgrid c2">
         <F id="p-title" label="Title *" full><input id="p-title" className="input" value={f.title} onChange={(e) => set('title', e.target.value)} autoFocus /></F>
-        <F id="p-abs" label="Abstract *" full><textarea id="p-abs" className="input" rows={5} value={f.abstract} onChange={(e) => set('abstract', e.target.value)} /></F>
+        <F id="p-abs" label="Abstract *" hint="Appears under #abstract in contents." full><textarea id="p-abs" className="input" rows={4} value={f.abstract} onChange={(e) => set('abstract', e.target.value)} /></F>
         <F id="p-cat" label="Category *"><select id="p-cat" className="select" value={f.category_slug} onChange={(e) => set('category_slug', e.target.value)}>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></F>
         <F id="p-cat2" label="Second category (optional)"><select id="p-cat2" className="select" value={f.category2_slug} onChange={(e) => set('category2_slug', e.target.value)}><option value="">None</option>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></F>
         <F id="p-auth" label="Authors * (the order you tick them is the order shown)" full>
@@ -151,18 +230,19 @@ function PaperForm({ row, data, onSave, onClose }) {
         <F id="p-format" label="Page layout" hint="Decides the section outline of demo text."><select id="p-format" className="select" value={f.format} onChange={(e) => set('format', e.target.value)}>{FORMATS.map((t) => <option key={t[0]} value={t[0]}>{t[1]}</option>)}</select></F>
         <F id="p-kw" label="Keywords" hint="Comma separated." full><input id="p-kw" className="input" value={f.keywords} onChange={(e) => set('keywords', e.target.value)} /></F>
         <F id="p-link" label="Paper link" hint="Public link to the manuscript (Drive, arXiv, …). Shown as “Open Paper Link”." full><input id="p-link" className="input" type="url" value={f.paper_url} onChange={(e) => set('paper_url', e.target.value)} placeholder="https://" /></F>
-        <div className="full"><CoverUpload id="p-cover" label="Cover image (auto-compressed to under 10 KB)" value={f.cover_url} onChange={(u) => set('cover_url', u)} /></div>
-        <F id="p-style" label="Generated art style" hint="Used when no cover image is uploaded."><select id="p-style" className="select" value={f.art_style} onChange={(e) => set('art_style', +e.target.value)}>{STYLES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
+        <F id="p-style" label="Generated art style" hint="Geometric art style for the paper detail page."><select id="p-style" className="select" value={f.art_style} onChange={(e) => set('art_style', +e.target.value)}>{STYLES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
         <F id="p-theme" label="Cover colour"><select id="p-theme" className="select" value={f.art_theme} onChange={(e) => set('art_theme', +e.target.value)}>{THEMES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
         <F id="p-views" label="Views"><input id="p-views" className="input" type="number" min="0" value={f.views} onChange={(e) => set('views', e.target.value)} /></F>
         <F id="p-doi" label="DOI (only if verified)"><input id="p-doi" className="input" value={f.doi} onChange={(e) => set('doi', e.target.value)} placeholder="10.xxxx/xxxxx" /></F>
-        <F id="p-text" label="Full text (optional)" hint="Separate paragraphs with a blank line. Leave empty to show only the abstract and link." full><textarea id="p-text" className="input" rows={6} value={f.full_text} onChange={(e) => set('full_text', e.target.value)} /></F>
-        <F id="p-refs" label="References (optional)" hint="One reference per line." full><textarea id="p-refs" className="input" rows={3} value={f.refs_text} onChange={(e) => set('refs_text', e.target.value)} /></F>
-        <div className="full">
-          <div className="field check"><label><input type="checkbox" checked={f.featured} onChange={(e) => set('featured', e.target.checked)} /> Featured on the home page hero (only one paper can be featured)</label></div>
-          <div className="field check"><label><input type="checkbox" checked={f.peer_reviewed} onChange={(e) => set('peer_reviewed', e.target.checked)} /> Peer review verified</label></div>
-          <div className="field check"><label><input type="checkbox" checked={f.is_demo} onChange={(e) => set('is_demo', e.target.checked)} /> Demonstration / sample record (shows “demonstration” notices and placeholder text)</label></div>
-        </div>
+        <F id="p-intro" label="Introduction (optional)" hint="Appears under #introduction in contents." full><textarea id="p-intro" className="input" rows={4} value={f.introduction} onChange={(e) => set('introduction', e.target.value)} placeholder="Write the introduction here..." /></F>
+        <F id="p-scope" label="Scope and Approach (optional)" hint="Appears under #scope-and-approach in contents." full><textarea id="p-scope" className="input" rows={4} value={f.scope_and_approach} onChange={(e) => set('scope_and_approach', e.target.value)} placeholder="Describe the scope and approach..." /></F>
+        <F id="p-lit" label="Literature Review (optional)" hint="Appears under #literature-review in contents." full><textarea id="p-lit" className="input" rows={4} value={f.literature_review} onChange={(e) => set('literature_review', e.target.value)} placeholder="Review existing work..." /></F>
+        <F id="p-disc" label="Discussion (optional)" hint="Appears under #discussion in contents." full><textarea id="p-disc" className="input" rows={4} value={f.discussion} onChange={(e) => set('discussion', e.target.value)} placeholder="Discuss findings and implications..." /></F>
+        <F id="p-conc" label="Conclusion (optional)" hint="Appears under #conclusion in contents." full><textarea id="p-conc" className="input" rows={4} value={f.conclusion} onChange={(e) => set('conclusion', e.target.value)} placeholder="State the conclusions..." /></F>
+        {f.other_sections ? (
+          <F id="p-other" label="Additional Sections (optional)" full><textarea id="p-other" className="input" rows={4} value={f.other_sections} onChange={(e) => set('other_sections', e.target.value)} /></F>
+        ) : null}
+        <F id="p-refs" label="References (optional)" hint="One reference per line. Appears under #references in contents." full><textarea id="p-refs" className="input" rows={3} value={f.refs_text} onChange={(e) => set('refs_text', e.target.value)} placeholder="Author, A. (Year). Title. Journal..." /></F>
       </div>
       <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save paper' : 'Publish paper'} />
     </form>

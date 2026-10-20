@@ -30,7 +30,8 @@ export default function JournalsClient({ data, initial }) {
   useEffect(() => {
     const u = new URLSearchParams();
     Object.entries(st).forEach(([k, v]) => { if (v && v !== 'latest') u.set(k, v); });
-    window.history.replaceState(null, '', '/journals' + (u.toString() ? '?' + u : ''));
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/categories';
+    window.history.replaceState(null, '', path + (u.toString() ? '?' + u : ''));
   }, [st]);
 
   return (

@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { getAll } from '@/lib/data';
 import { makeHelpers } from '@/lib/helpers';
 import { Icon } from '@/components/Icon';
-import { Counter } from '@/components/Effects';
 import { Cover, PaperCard, NewsCard, AuthorCard, DemoNote, SetupNotice } from '@/components/ui';
 
 export default async function Home() {
@@ -15,7 +14,6 @@ export default async function Home() {
   const popular = [...P].sort((a, b) => b.views - a.views).slice(0, 6);
   const students = [...P].filter((p) => p.authors[0] && h.author(p.authors[0]).type === 'student').sort(h.byDate).slice(0, 3);
   const faculty = [...P].filter((p) => h.hasType(p, 'faculty')).sort(h.byDate).slice(0, 5);
-  const insts = new Set(AU.map((a) => a.inst).filter((i) => i && i !== 'Independent'));
   const recentAuth = [...AU].sort((a, b) => b.seq - a.seq).slice(0, 6);
   const aiCat = CATS.find((c) => c.slug === 'ai-ml') || CATS[0];
   const aiPapers = P.filter((p) => aiCat && h.inCat(p, aiCat.slug)).slice(0, 3);
@@ -46,43 +44,33 @@ export default async function Home() {
               <Link href="/search?q=language+models">language models</Link><Link href="/search?q=solar">solar</Link><Link href="/search?q=health">health</Link><Link href="/search?q=accessibility">accessibility</Link>
             </div>
             <div className="hero-cta reveal">
-              <Link className="btn btn-primary" href="/journals">Explore Journals <Icon name="arrow" size={18} /></Link>
+              <Link className="btn btn-primary" href="/categories">Explore Categories <Icon name="arrow" size={18} /></Link>
               <Link className="btn btn-ghost" href="/submit">Submit Research</Link>
             </div>
           </div>
-          <Link className="hero-cover reveal" href={`/journals/${feat.slug}`} aria-label={`Featured research: ${feat.title}`}>
-            <span className="hero-badge">Featured research</span><span className="hero-block" aria-hidden="true" />
-            <Cover p={feat} h={h} cls="xl" />
-          </Link>
-        </div>
-      </section>
-
-      <div className="ticker" aria-label="Research disciplines">
-        <div className="ticker-track">
-          {[...CATS, ...CATS].map((c, i) => (<span key={i} style={{ display: 'contents' }}><Link href={`/journals?cat=${c.slug}`}>{c.name}</Link><i aria-hidden="true">✦</i></span>))}
-        </div>
-      </div>
-
-      <section className="stats">
-        <div className="container">
-          <div className="stats-grid">
-            <div className="stat"><Counter end={P.length} /><span>Published papers</span></div>
-            <div className="stat"><Counter end={CATS.length} /><span>Research categories</span></div>
-            <div className="stat"><Counter end={AU.length} /><span>Contributing authors</span></div>
-            <div className="stat"><Counter end={insts.size} /><span>Institutions</span></div>
+          <div className="hero-visual reveal">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/Orbiting%20Globe%20and%20Books%20of%20Knowledge.png"
+              alt="Orbiting Globe and Books of Knowledge"
+              width={560}
+              height={500}
+              className="hero-floating-img"
+              loading="eager"
+              decoding="async"
+            />
           </div>
-          {hasDemo ? <p className="stats-note"><Icon name="info" size={15} /> Demonstration data — counts include fictional sample records, not verified real figures.</p> : null}
         </div>
       </section>
 
       <section className="section"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Fresh from the journals</p><h2>Latest Research</h2></div><Link className="more" href="/journals">View all papers <Icon name="arrow" size={16} /></Link></div>
+        <div className="section-head reveal"><div><p className="eyebrow">Fresh from the collection</p><h2>Latest Research</h2></div><Link className="more" href="/categories">View all papers <Icon name="arrow" size={16} /></Link></div>
         <div className="grid g3">{latest.map((p) => <PaperCard key={p.id} p={p} h={h} />)}</div>
         {hasDemo ? <DemoNote /> : null}
       </div></section>
 
       <section className="section tint"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Readership</p><h2>Most Read Research</h2><p className="sub">View counts are sample demonstration metrics.</p></div><Link className="more" href="/journals?sort=read">View All <Icon name="arrow" size={16} /></Link></div>
+        <div className="section-head reveal"><div><p className="eyebrow">Readership</p><h2>Most Read Research</h2><p className="sub">View counts are sample demonstration metrics.</p></div><Link className="more" href="/categories?sort=read">View All <Icon name="arrow" size={16} /></Link></div>
         <ol className="pop-list">
           {popular.map((p, i) => (
             <li className="pop-item reveal" key={p.id}>
@@ -126,7 +114,7 @@ export default async function Home() {
         <div className="section-head reveal"><div><p className="eyebrow">Browse by discipline</p><h2>Explore Research Categories</h2></div><Link className="more" href="/categories">All categories <Icon name="arrow" size={16} /></Link></div>
         <div className="cat-grid">
           {CATS.map((c) => (
-            <Link className="cat-tile reveal" href={`/journals?cat=${c.slug}`} key={c.slug}>
+            <Link className="cat-tile reveal" href={`/categories?cat=${c.slug}`} key={c.slug}>
               <span className="cat-ic"><Icon name={c.icon} size={26} /></span><h3>{c.name}</h3>
               <span className="cat-count">{P.filter((p) => h.inCat(p, c.slug)).length} papers</span><span className="cat-arrow"><Icon name="arrow" size={18} /></span>
             </Link>
@@ -147,7 +135,7 @@ export default async function Home() {
               <div><dt>Papers</dt><dd>{P.filter((p) => h.inCat(p, aiCat.slug)).length} in this collection</dd></div>
             </dl>
             <ul className="fj-list">{aiPapers.map((p) => <li key={p.id}><Link href={`/journals/${p.slug}`}>{p.title}</Link></li>)}</ul>
-            <Link className="btn btn-white" href={`/journals?cat=${aiCat.slug}`}>Explore Journal <Icon name="arrow" size={18} /></Link>
+            <Link className="btn btn-white" href={`/categories?cat=${aiCat.slug}`}>Explore Category <Icon name="arrow" size={18} /></Link>
           </div>
         </div></section>
       ) : null}
@@ -160,7 +148,7 @@ export default async function Home() {
       <section className="cta"><div className="container cta-in reveal">
         <h2>Your research deserves to be discovered.</h2>
         <p>Share your findings with readers across disciplines. Every submission is reviewed by the editorial team before anything is published.</p>
-        <div className="hero-cta"><Link className="btn btn-white" href="/journals">Explore Research</Link><Link className="btn btn-outline-white" href="/submit">Submit Your Paper</Link></div>
+        <div className="hero-cta"><Link className="btn btn-white" href="/categories">Explore Research</Link><Link className="btn btn-outline-white" href="/submit">Submit Your Paper</Link></div>
       </div></section>
     </>
   );

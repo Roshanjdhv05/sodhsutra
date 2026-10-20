@@ -7,12 +7,11 @@ import { Avatar } from './ui';
 import { makeHelpers, initials } from '@/lib/helpers';
 import { toast } from '@/lib/toast';
 
-const NAV = [['Home', '/', 'home'], ['Journals', '/journals', 'journals'], ['Categories', '/categories', 'categories'], ['Research News', '/news', 'news'], ['Student Research', '/student-research', 'student'], ['Faculty Research', '/faculty-research', 'faculty'], ['About', '/about', 'about']];
+const NAV = [['Home', '/', 'home'], ['Categories', '/categories', 'categories'], ['Research News', '/news', 'news'], ['Student Research', '/student-research', 'student'], ['Faculty Research', '/faculty-research', 'faculty'], ['About', '/about', 'about']];
 
 function activeKey(p) {
   if (p === '/') return 'home';
-  if (p.startsWith('/journals')) return 'journals';
-  if (p.startsWith('/categories')) return 'categories';
+  if (p.startsWith('/categories') || p.startsWith('/journals')) return 'categories';
   if (p.startsWith('/news')) return 'news';
   if (p.startsWith('/student-research')) return 'student';
   if (p.startsWith('/faculty-research')) return 'faculty';

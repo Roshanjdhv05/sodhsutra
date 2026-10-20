@@ -36,7 +36,7 @@ export default function SearchClient({ data, initialQ = '', initialCat = '' }) {
         {list.length ? list.map((p) => <PaperCard key={p.id} p={p} h={h} />) : (
           <div className="span-all">
             <Empty message="Nothing matched. Try a broader keyword, check spelling, or browse by category.">
-              <div className="row"><Link className="btn btn-primary" href="/journals">Browse journals</Link><Link className="btn btn-ghost" href="/categories">Browse categories</Link></div>
+              <div className="row"><Link className="btn btn-primary" href="/categories">Browse categories</Link></div>
               <ul className="tags center">{['learning', 'energy', 'health', 'students', 'policy'].map((k) => <li key={k}><button type="button" style={{ all: 'unset', cursor: 'pointer' }} onClick={() => setQ(k)}>{k}</button></li>)}</ul>
             </Empty>
           </div>

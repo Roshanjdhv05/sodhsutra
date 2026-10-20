@@ -33,14 +33,14 @@ export default async function PaperPage({ params }) {
         <div className="container">
           <nav className="crumbs" aria-label="Breadcrumb">
             <ol>
-              <li><Link href="/">Home</Link></li><li><Link href="/journals">Journals</Link></li>
-              <li><Link href={`/journals?cat=${c.slug}`}>{c.short}</Link></li>
+              <li><Link href="/">Home</Link></li><li><Link href="/categories">Categories</Link></li>
+              <li><Link href={`/categories?cat=${c.slug}`}>{c.short}</Link></li>
               <li><span aria-current="page">{p.title.length > 48 ? p.title.slice(0, 48) + '…' : p.title}</span></li>
             </ol>
           </nav>
           <div className="article-grid">
             <div>
-              <p className="eyebrow"><Link href={`/journals?cat=${c.slug}`}>{c.name}</Link> · {p.type}</p>
+              <p className="eyebrow"><Link href={`/categories?cat=${c.slug}`}>{c.name}</Link> · {p.type}</p>
               <h1>{p.title}</h1>
               <ul className="authors-line">
                 {p.authors.map((s) => {
@@ -74,19 +74,28 @@ export default async function PaperPage({ params }) {
       </section>
 
       <section className="container article-body">
-        <Toc secs={secs} />
+        {secs.length > 0 ? <Toc secs={secs} /> : null}
         <article className="prose">
-          {secs.map((s) => (
-            <section id={s.id} key={s.id}>
-              <h2>{s.title}</h2>
-              {s.paras.map((t, i) => <p key={i}>{t}</p>)}
-              {s.link ? <p><a href={s.link} target="_blank" rel="noopener noreferrer" className="read-link">Open the paper <Icon name="arrow" size={16} /></a></p> : null}
-              {s.refs && s.refs.length ? <ol>{s.refs.map((r, i) => <li key={i}>{r}</li>)}</ol> : null}
-              {s.id === 'abstract' ? (
+          {secs.length > 0 ? (
+            secs.map((s) => (
+              <section id={s.id} key={s.id}>
+                <h2>{s.title}</h2>
+                {s.paras.map((t, i) => <p key={i}>{t}</p>)}
+                {s.link ? <p><a href={s.link} target="_blank" rel="noopener noreferrer" className="read-link">Open the paper <Icon name="arrow" size={16} /></a></p> : null}
+                {s.refs && s.refs.length ? <ol>{s.refs.map((r, i) => <li key={i}>{r}</li>)}</ol> : null}
+                {s.id === 'abstract' ? (
+                  <ul className="tags kw" aria-label="Keywords">{p.keywords.map((k) => <li key={k}><Link href={`/search?q=${encodeURIComponent(k)}`}>{k}</Link></li>)}</ul>
+                ) : null}
+              </section>
+            ))
+          ) : (
+            <section>
+              <p className="muted">No content sections have been added for this paper.</p>
+              {p.keywords && p.keywords.length ? (
                 <ul className="tags kw" aria-label="Keywords">{p.keywords.map((k) => <li key={k}><Link href={`/search?q=${encodeURIComponent(k)}`}>{k}</Link></li>)}</ul>
               ) : null}
             </section>
-          ))}
+          )}
           <CiteBox base={citeBase(p, h)} />
           <ShareRow title={p.title} />
           <section className="about-authors">
@@ -106,7 +115,7 @@ export default async function PaperPage({ params }) {
 
       {rel.length ? (
         <section className="section tint"><div className="container">
-          <div className="section-head"><div><p className="eyebrow">Keep reading</p><h2>Related research</h2></div><Link className="more" href={`/journals?cat=${c.slug}`}>More in {c.short} <Icon name="arrow" size={16} /></Link></div>
+          <div className="section-head"><div><p className="eyebrow">Keep reading</p><h2>Related research</h2></div><Link className="more" href={`/categories?cat=${c.slug}`}>More in {c.short} <Icon name="arrow" size={16} /></Link></div>
           <div className="grid g3">{rel.map((x) => <PaperCard key={x.id} p={x} h={h} />)}</div>
         </div></section>
       ) : null}
