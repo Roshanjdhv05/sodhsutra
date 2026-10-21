@@ -15,7 +15,7 @@ export default function SiteFooter({ brand }) {
             </div>
           </div>
           <div><h4>Explore</h4><ul>
-            <li><Link href="/categories">Categories</Link></li><li><Link href="/news">Research News</Link></li>
+            <li><Link href="/published-papers">Published Papers</Link></li><li><Link href="/news">Research News</Link></li>
             <li><Link href="/student-research">Student Research</Link></li><li><Link href="/faculty-research">Faculty Research</Link></li></ul></div>
           <div><h4>Publish</h4><ul>
             <li><Link href="/submit">Submit Research</Link></li><li><Link href="/submission-guidelines">Submission Guidelines</Link></li><li><Link href="/editorial-policy">Editorial Policies</Link></li></ul></div>

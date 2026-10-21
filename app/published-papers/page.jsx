@@ -2,9 +2,12 @@ import { getAll, slim } from '@/lib/data';
 import { PageHead, SetupNotice } from '@/components/ui';
 import JournalsClient from '@/components/JournalsClient';
 
-export const metadata = { title: 'Categories' };
+export const metadata = {
+  title: 'Published Papers',
+  description: 'Browse all published research papers, filter by category, author type, or publication year.',
+};
 
-export default async function CategoriesPage({ searchParams }) {
+export default async function PublishedPapersPage({ searchParams }) {
   const sp = (await searchParams) || {};
   const D = await getAll();
   if (D.error) return <SetupNotice error={D.error} />;
@@ -12,10 +15,10 @@ export default async function CategoriesPage({ searchParams }) {
   return (
     <>
       <PageHead
-        eyebrow="Categories"
-        title="Browse research by category"
-        intro="Search, filter and sort every paper in the collection. Each card opens the full article page."
-        crumbs={[['Home', '/'], ['Categories']]}
+        eyebrow="Published Research"
+        title="Published Papers"
+        intro="Search, filter, and explore all published papers in the collection. Each card opens the full article page."
+        crumbs={[['Home', '/'], ['Published Papers']]}
       />
       <JournalsClient
         data={slim(D)}

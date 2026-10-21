@@ -39,7 +39,7 @@ export default async function AuthorPage({ params }) {
           <h3>Research interests</h3>
           <ul className="tags">{a.interests.map((i) => <li key={i}><Link href={`/search?q=${encodeURIComponent(i)}`}>{i}</Link></li>)}</ul>
           <h3>Research categories</h3>
-          <div className="chips">{cs.map((c) => <Link key={c} className="chip big" href={`/categories?cat=${c}`}>{h.cat(c).short}</Link>)}</div>
+          <div className="chips">{cs.map((c) => <Link key={c} className="chip big" href={`/published-papers?cat=${c}`}>{h.cat(c).short}</Link>)}</div>
           <h3>External profiles</h3>
           <p className="muted">No external researcher profiles supplied.</p>
           {ps.some((p) => p.demo) ? <DemoNote>Sample profile — fictional demonstration data.</DemoNote> : null}

@@ -30,7 +30,7 @@ export default function JournalsClient({ data, initial }) {
   useEffect(() => {
     const u = new URLSearchParams();
     Object.entries(st).forEach(([k, v]) => { if (v && v !== 'latest') u.set(k, v); });
-    const path = typeof window !== 'undefined' ? window.location.pathname : '/categories';
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/published-papers';
     window.history.replaceState(null, '', path + (u.toString() ? '?' + u : ''));
   }, [st]);
 

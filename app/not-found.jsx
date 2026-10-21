@@ -11,7 +11,7 @@ export default function NotFound() {
         <div className="empty" role="status">
           <h3>We couldn’t find that page</h3>
           <p>Try browsing the full list instead.</p>
-          <div className="row"><Link className="btn btn-primary" href="/categories">Browse categories</Link><Link className="btn btn-ghost" href="/">Go home</Link></div>
+          <div className="row"><Link className="btn btn-primary" href="/published-papers">Browse published papers</Link><Link className="btn btn-ghost" href="/">Go home</Link></div>
         </div>
       </div>
     </>

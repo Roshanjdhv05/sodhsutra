@@ -44,7 +44,7 @@ export default async function Home() {
               <Link href="/search?q=language+models">language models</Link><Link href="/search?q=solar">solar</Link><Link href="/search?q=health">health</Link><Link href="/search?q=accessibility">accessibility</Link>
             </div>
             <div className="hero-cta reveal">
-              <Link className="btn btn-primary" href="/categories">Explore Categories <Icon name="arrow" size={18} /></Link>
+              <Link className="btn btn-primary" href="/published-papers">Explore Published Papers <Icon name="arrow" size={18} /></Link>
               <Link className="btn btn-ghost" href="/submit">Submit Research</Link>
             </div>
           </div>
@@ -64,13 +64,13 @@ export default async function Home() {
       </section>
 
       <section className="section"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Fresh from the collection</p><h2>Latest Research</h2></div><Link className="more" href="/categories">View all papers <Icon name="arrow" size={16} /></Link></div>
+        <div className="section-head reveal"><div><p className="eyebrow">Fresh from the collection</p><h2>Latest Research</h2></div><Link className="more" href="/published-papers">View all papers <Icon name="arrow" size={16} /></Link></div>
         <div className="grid g3">{latest.map((p) => <PaperCard key={p.id} p={p} h={h} />)}</div>
         {hasDemo ? <DemoNote /> : null}
       </div></section>
 
       <section className="section tint"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Readership</p><h2>Most Read Research</h2><p className="sub">View counts are sample demonstration metrics.</p></div><Link className="more" href="/categories?sort=read">View All <Icon name="arrow" size={16} /></Link></div>
+        <div className="section-head reveal"><div><p className="eyebrow">Readership</p><h2>Most Read Research</h2><p className="sub">View counts are sample demonstration metrics.</p></div><Link className="more" href="/published-papers?sort=read">View All <Icon name="arrow" size={16} /></Link></div>
         <ol className="pop-list">
           {popular.map((p, i) => (
             <li className="pop-item reveal" key={p.id}>
@@ -111,10 +111,10 @@ export default async function Home() {
       </div></section>
 
       <section className="section tint"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Browse by discipline</p><h2>Explore Research Categories</h2></div><Link className="more" href="/categories">All categories <Icon name="arrow" size={16} /></Link></div>
+        <div className="section-head reveal"><div><p className="eyebrow">Browse by discipline</p><h2>Explore Research Categories</h2></div><Link className="more" href="/published-papers">All papers <Icon name="arrow" size={16} /></Link></div>
         <div className="cat-grid">
           {CATS.map((c) => (
-            <Link className="cat-tile reveal" href={`/categories?cat=${c.slug}`} key={c.slug}>
+            <Link className="cat-tile reveal" href={`/published-papers?cat=${c.slug}`} key={c.slug}>
               <span className="cat-ic"><Icon name={c.icon} size={26} /></span><h3>{c.name}</h3>
               <span className="cat-count">{P.filter((p) => h.inCat(p, c.slug)).length} papers</span><span className="cat-arrow"><Icon name="arrow" size={18} /></span>
             </Link>
@@ -135,7 +135,7 @@ export default async function Home() {
               <div><dt>Papers</dt><dd>{P.filter((p) => h.inCat(p, aiCat.slug)).length} in this collection</dd></div>
             </dl>
             <ul className="fj-list">{aiPapers.map((p) => <li key={p.id}><Link href={`/journals/${p.slug}`}>{p.title}</Link></li>)}</ul>
-            <Link className="btn btn-white" href={`/categories?cat=${aiCat.slug}`}>Explore Category <Icon name="arrow" size={18} /></Link>
+            <Link className="btn btn-white" href={`/published-papers?cat=${aiCat.slug}`}>Explore Category <Icon name="arrow" size={18} /></Link>
           </div>
         </div></section>
       ) : null}
@@ -148,7 +148,7 @@ export default async function Home() {
       <section className="cta"><div className="container cta-in reveal">
         <h2>Your research deserves to be discovered.</h2>
         <p>Share your findings with readers across disciplines. Every submission is reviewed by the editorial team before anything is published.</p>
-        <div className="hero-cta"><Link className="btn btn-white" href="/categories">Explore Research</Link><Link className="btn btn-outline-white" href="/submit">Submit Your Paper</Link></div>
+        <div className="hero-cta"><Link className="btn btn-white" href="/published-papers">Explore Published Papers</Link><Link className="btn btn-outline-white" href="/submit">Submit Your Paper</Link></div>
       </div></section>
     </>
   );

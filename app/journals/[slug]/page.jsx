@@ -33,14 +33,14 @@ export default async function PaperPage({ params }) {
         <div className="container">
           <nav className="crumbs" aria-label="Breadcrumb">
             <ol>
-              <li><Link href="/">Home</Link></li><li><Link href="/categories">Categories</Link></li>
-              <li><Link href={`/categories?cat=${c.slug}`}>{c.short}</Link></li>
+              <li><Link href="/">Home</Link></li><li><Link href="/published-papers">Published Papers</Link></li>
+              <li><Link href={`/published-papers?cat=${c.slug}`}>{c.short}</Link></li>
               <li><span aria-current="page">{p.title.length > 48 ? p.title.slice(0, 48) + '…' : p.title}</span></li>
             </ol>
           </nav>
           <div className="article-grid">
             <div>
-              <p className="eyebrow"><Link href={`/categories?cat=${c.slug}`}>{c.name}</Link> · {p.type}</p>
+              <p className="eyebrow"><Link href={`/published-papers?cat=${c.slug}`}>{c.name}</Link> · {p.type}</p>
               <h1>{p.title}</h1>
               <ul className="authors-line">
                 {p.authors.map((s) => {

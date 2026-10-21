@@ -7,5 +7,6 @@ export default async function JournalsPage({ searchParams }) {
     if (v) u.set(k, Array.isArray(v) ? v[0] : v);
   });
   const qs = u.toString();
-  redirect(`/categories${qs ? `?${qs}` : ''}`);
+  redirect(`/published-papers${qs ? `?${qs}` : ''}`);
 }
+
