@@ -68,6 +68,135 @@ export function PaperCard({ p, h, byline }) {
   );
 }
 
+export function PaperRow({ p, h }) {
+  const href = `/journals/${p.slug}`;
+  const cat = h.cat(p.cat);
+  const catName = (cat.short || cat.name || '').toUpperCase();
+  const authorText = h.authorNames(p);
+  const pageCount = p.pages || (p.fullText ? Math.max(4, Math.ceil(p.fullText.length / 3000)) : 8);
+  const hasDoi = Boolean(p.doi && String(p.doi).trim());
+  const doiValue = hasDoi
+    ? p.doi.trim()
+    : (p.code
+      ? `10.5555/shodh.${p.year || 2026}.${p.code.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+      : `10.5555/shodh.${p.year || 2026}.${p.id ? p.id.slice(0, 8) : '001'}`);
+  const doiHref = doiValue.startsWith('http') ? doiValue : `https://doi.org/${doiValue}`;
+
+  return (
+    <article className="paper-row reveal">
+      <div className="paper-row-main">
+        <div className="paper-row-top">
+          <span className="paper-row-cat">{catName}</span>
+          <time className="paper-row-date" dateTime={p.date}>{h.fmt(p.date)}</time>
+        </div>
+        <h3 className="paper-row-title">
+          <Link href={href}>{p.title}</Link>
+        </h3>
+        {authorText ? (
+          <p className="paper-row-authors">
+            <Icon name="user" size={14} className="paper-row-user-ic" />
+            <span>{authorText}</span>
+          </p>
+        ) : null}
+        <div className="paper-row-meta">
+          <span className="paper-row-pdf">
+            <svg className="paper-row-pdf-ic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="M9 15v-4h2a1.5 1.5 0 0 1 0 3H9" />
+            </svg>
+            PDF · {pageCount} pages
+          </span>
+          <span className="paper-row-sep" aria-hidden="true">·</span>
+          <span className="paper-row-doi">
+            <span className="paper-row-doi-lbl">DOI:</span>{' '}
+            <a
+              href={doiHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="paper-row-doi-link"
+              title={doiValue}
+            >
+              {doiValue}
+            </a>
+          </span>
+        </div>
+      </div>
+
+      <div className="paper-row-body">
+        <p className="paper-row-abs">{p.abstract}</p>
+      </div>
+
+      <div className="paper-row-action">
+        <Link className="paper-row-read-link" href={href}>
+          Read Paper <span className="paper-row-arrow" aria-hidden="true">→</span>
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+export function LatestPaperCard({ p, h }) {
+  const href = `/journals/${p.slug}`;
+  const cat = h.cat(p.cat);
+  const catName = (cat.short || cat.name || '').toUpperCase();
+  const authorText = h.authorNames(p);
+  const pageCount = p.pages || (p.fullText ? Math.max(4, Math.ceil(p.fullText.length / 3000)) : 8);
+  const hasDoi = Boolean(p.doi && String(p.doi).trim());
+
+  return (
+    <article className="lr-card reveal">
+      <div className="lr-top">
+        <span className="lr-cat">{catName}</span>
+        <span className="lr-dash" aria-hidden="true">—</span>
+        <time className="lr-date" dateTime={p.date}>{h.fmt(p.date)}</time>
+      </div>
+
+      <h3 className="lr-title">
+        <Link href={href}>{p.title}</Link>
+      </h3>
+
+      {authorText ? <p className="lr-authors">{authorText}</p> : null}
+
+      <div className="lr-meta">
+        <span className="lr-pdf">
+          <svg className="lr-pdf-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <path d="M9 15v-4h2a1.5 1.5 0 0 1 0 3H9" />
+          </svg>
+          PDF · {pageCount} pages
+        </span>
+        <span className="lr-sep" aria-hidden="true">·</span>
+        <span className="lr-doi">
+          <span className="lr-doi-lbl">DOI:</span>{' '}
+          {hasDoi ? (
+            <a
+              href={p.doi.startsWith('http') ? p.doi : `https://doi.org/${p.doi}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lr-doi-link"
+              title={p.doi}
+            >
+              {p.doi}
+            </a>
+          ) : (
+            <span className="lr-doi-none">--</span>
+          )}
+        </span>
+      </div>
+
+      <p className="lr-abs">{p.abstract}</p>
+
+      <div className="lr-foot">
+        <Link className="lr-read-link" href={href}>
+          Read paper <span className="lr-arrow" aria-hidden="true">→</span>
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 export function Thumb({ n }) {
   return (
     <div className={`thumb t${n.theme}`}>

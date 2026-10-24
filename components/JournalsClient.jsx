@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@/components/Icon';
-import { PaperCard, Empty, Pagination } from '@/components/ui';
+import { PaperRow, Empty, Pagination } from '@/components/ui';
 import { makeHelpers, authorTypes } from '@/lib/helpers';
 
 const PER = 9;
@@ -38,20 +38,41 @@ export default function JournalsClient({ data, initial }) {
     <section className="container listing">
       <button className="btn btn-ghost filter-toggle" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="sidebar"><Icon name="filter" size={18} /> Filters</button>
       <aside className={`sidebar ${open ? 'open' : ''}`} id="sidebar" aria-label="Filters">
-        <div className="field"><label htmlFor="f-q">Search</label><input className="input" id="f-q" type="search" placeholder="Title, author, keyword…" value={st.q} onChange={(e) => set('q', e.target.value)} /></div>
+        <div className="field">
+          <label htmlFor="f-q">Search</label>
+          <div className="sidebar-search-wrap">
+            <Icon name="search" size={16} className="sidebar-search-ic" />
+            <input className="input" id="f-q" type="search" placeholder="Title, author, keywords…" value={st.q} onChange={(e) => set('q', e.target.value)} />
+          </div>
+        </div>
         <fieldset><legend>Category</legend>
           <div className="radios scroll">
             <label><input type="radio" name="cat" value="" checked={!st.cat} onChange={() => set('cat', '')} /> All categories <em>{P.length}</em></label>
             {CATS.map((c) => <label key={c.slug}><input type="radio" name="cat" value={c.slug} checked={st.cat === c.slug} onChange={() => set('cat', c.slug)} /> {c.short} <em>{P.filter((p) => h.inCat(p, c.slug)).length}</em></label>)}
           </div>
         </fieldset>
-        <fieldset><legend>Author type</legend>
-          <div className="radios">{authorTypes.map((t) => <label key={t[0]}><input type="radio" name="type" value={t[0]} checked={st.type === t[0]} onChange={() => set('type', t[0])} /> {t[1]}</label>)}</div>
+        <fieldset><legend>Institution type</legend>
+          <div className="radios">
+            <label><input type="radio" name="type" value="" checked={!st.type} onChange={() => set('type', '')} /> All types <em>{P.length}</em></label>
+            {authorTypes.filter(([t]) => t).map((t) => (
+              <label key={t[0]}>
+                <input type="radio" name="type" value={t[0]} checked={st.type === t[0]} onChange={() => set('type', t[0])} />
+                {t[1] === 'Student' ? 'Students' : t[1]}
+                <em>{P.filter((p) => h.hasType(p, t[0])).length}</em>
+              </label>
+            ))}
+          </div>
         </fieldset>
         <fieldset><legend>Publication year</legend>
           <div className="radios">
-            <label><input type="radio" name="year" value="" checked={!st.year} onChange={() => set('year', '')} /> All years</label>
-            {h.years(P).map((y) => <label key={y}><input type="radio" name="year" value={String(y)} checked={st.year === String(y)} onChange={() => set('year', String(y))} /> {y}</label>)}
+            <label><input type="radio" name="year" value="" checked={!st.year} onChange={() => set('year', '')} /> All years <em>{P.length}</em></label>
+            {h.years(P).map((y) => (
+              <label key={y}>
+                <input type="radio" name="year" value={String(y)} checked={st.year === String(y)} onChange={() => set('year', String(y))} />
+                {y}
+                <em>{P.filter((p) => p.year === y).length}</em>
+              </label>
+            ))}
           </div>
         </fieldset>
         <button className="btn btn-ghost btn-block" onClick={clear}>Clear Filters</button>
@@ -65,8 +86,8 @@ export default function JournalsClient({ data, initial }) {
             </select>
           </div>
         </div>
-        <div className="grid g3">
-          {slice.length ? slice.map((p) => <PaperCard key={p.id} p={p} h={h} />) : (
+        <div className="papers-list">
+          {slice.length ? slice.map((p) => <PaperRow key={p.id} p={p} h={h} />) : (
             <div className="span-all"><Empty message="No papers match your search and filters. Try fewer keywords or clear the filters."><button className="btn btn-primary" onClick={clear}>Clear Filters</button></Empty></div>
           )}
         </div>

@@ -2,13 +2,13 @@ import Link from 'next/link';
 import { getAll } from '@/lib/data';
 import { makeHelpers } from '@/lib/helpers';
 import { Icon } from '@/components/Icon';
-import { Cover, PaperCard, NewsCard, AuthorCard, DemoNote, SetupNotice } from '@/components/ui';
+import { Cover, PaperCard, LatestPaperCard, AuthorCard, DemoNote, SetupNotice } from '@/components/ui';
 
 export default async function Home() {
   const D = await getAll();
   if (D.error) return <SetupNotice error={D.error} />;
   const h = makeHelpers(D);
-  const { papers: P, authors: AU, categories: CATS, news } = D;
+  const { papers: P, authors: AU, categories: CATS } = D;
   const feat = P.find((p) => p.featured) || [...P].sort(h.byDate)[0];
   const latest = [...P].sort(h.byDate).slice(0, 6);
   const popular = [...P].sort((a, b) => b.views - a.views).slice(0, 6);
@@ -17,7 +17,6 @@ export default async function Home() {
   const recentAuth = [...AU].sort((a, b) => b.seq - a.seq).slice(0, 6);
   const aiCat = CATS.find((c) => c.slug === 'ai-ml') || CATS[0];
   const aiPapers = P.filter((p) => aiCat && h.inCat(p, aiCat.slug)).slice(0, 3);
-  const latestNews = [...news].sort(h.byDate).slice(0, 3);
   const hasDemo = P.some((p) => p.demo);
 
   if (!feat) {
@@ -63,9 +62,9 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Fresh from the collection</p><h2>Latest Research</h2></div><Link className="more" href="/published-papers">View all papers <Icon name="arrow" size={16} /></Link></div>
-        <div className="grid g3">{latest.map((p) => <PaperCard key={p.id} p={p} h={h} />)}</div>
+      <section className="section section-latest"><div className="container">
+        <div className="latest-head reveal"><h2>Latest Research</h2><Link className="more" href="/published-papers">View all papers <Icon name="arrow" size={16} /></Link></div>
+        <div className="latest-grid">{latest.map((p) => <LatestPaperCard key={p.id} p={p} h={h} />)}</div>
         {hasDemo ? <DemoNote /> : null}
       </div></section>
 
@@ -81,12 +80,6 @@ export default async function Home() {
             </li>
           ))}
         </ol>
-      </div></section>
-
-      <section className="section"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Editorial · not peer-reviewed research</p><h2>Research News</h2></div><Link className="more" href="/news">All news <Icon name="arrow" size={16} /></Link></div>
-        <div className="grid g3">{latestNews.map((n) => <NewsCard key={n.id} n={n} h={h} />)}</div>
-        <p className="demo-note"><Icon name="info" size={16} /> News items are editorial pieces, distinct from research papers. Sample items do not report real discoveries.</p>
       </div></section>
 
       <section className="section tint"><div className="container">
