@@ -2,21 +2,18 @@ import Link from 'next/link';
 import { getAll } from '@/lib/data';
 import { makeHelpers } from '@/lib/helpers';
 import { Icon } from '@/components/Icon';
-import { Cover, PaperCard, LatestPaperCard, AuthorCard, DemoNote, SetupNotice } from '@/components/ui';
+import { Cover, PaperCard, LatestPaperCard, DemoNote, SetupNotice } from '@/components/ui';
 
 export default async function Home() {
   const D = await getAll();
   if (D.error) return <SetupNotice error={D.error} />;
   const h = makeHelpers(D);
-  const { papers: P, authors: AU, categories: CATS } = D;
+  const { papers: P, categories: CATS } = D;
   const feat = P.find((p) => p.featured) || [...P].sort(h.byDate)[0];
   const latest = [...P].sort(h.byDate).slice(0, 6);
   const popular = [...P].sort((a, b) => b.views - a.views).slice(0, 6);
   const students = [...P].filter((p) => p.authors[0] && h.author(p.authors[0]).type === 'student').sort(h.byDate).slice(0, 3);
   const faculty = [...P].filter((p) => h.hasType(p, 'faculty')).sort(h.byDate).slice(0, 5);
-  const recentAuth = [...AU].sort((a, b) => b.seq - a.seq).slice(0, 6);
-  const aiCat = CATS.find((c) => c.slug === 'ai-ml') || CATS[0];
-  const aiPapers = P.filter((p) => aiCat && h.inCat(p, aiCat.slug)).slice(0, 3);
   const hasDemo = P.some((p) => p.demo);
 
   if (!feat) {
@@ -115,34 +112,7 @@ export default async function Home() {
         </div>
       </div></section>
 
-      {aiPapers.length ? (
-        <section className="fj"><div className="container fj-grid">
-          <div className="fj-cover reveal"><Cover p={aiPapers[0]} h={h} cls="xl" /></div>
-          <div className="fj-copy reveal">
-            <p className="eyebrow light">Featured collection</p>
-            <h2>Machine Intelligence &amp; Society</h2>
-            <p>A research collection gathering work on language models, evaluation and the practical questions of deploying learning systems — from classrooms to crop fields.</p>
-            <dl className="fj-meta">
-              <div><dt>Discipline</dt><dd>{aiCat.name}</dd></div>
-              <div><dt>Editor</dt><dd>Editor name — placeholder</dd></div>
-              <div><dt>Papers</dt><dd>{P.filter((p) => h.inCat(p, aiCat.slug)).length} in this collection</dd></div>
-            </dl>
-            <ul className="fj-list">{aiPapers.map((p) => <li key={p.id}><Link href={`/journals/${p.slug}`}>{p.title}</Link></li>)}</ul>
-            <Link className="btn btn-white" href={`/published-papers?cat=${aiCat.slug}`}>Explore Category <Icon name="arrow" size={18} /></Link>
-          </div>
-        </div></section>
-      ) : null}
 
-      <section className="section"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">New voices</p><h2>Recently Added Authors</h2></div><Link className="more" href="/authors">All authors <Icon name="arrow" size={16} /></Link></div>
-        <div className="grid g3">{recentAuth.map((a) => <AuthorCard key={a.slug} a={a} />)}</div>
-      </div></section>
-
-      <section className="cta"><div className="container cta-in reveal">
-        <h2>Your research deserves to be discovered.</h2>
-        <p>Share your findings with readers across disciplines. Every submission is reviewed by the editorial team before anything is published.</p>
-        <div className="hero-cta"><Link className="btn btn-white" href="/published-papers">Explore Published Papers</Link><Link className="btn btn-outline-white" href="/submit">Submit Your Paper</Link></div>
-      </div></section>
     </>
   );
 }

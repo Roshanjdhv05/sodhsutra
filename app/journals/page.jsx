@@ -1,12 +1,15 @@
-import { redirect } from 'next/navigation';
+import { getAll, slim } from '@/lib/data';
+import { SetupNotice } from '@/components/ui';
+import JournalLibrary from '@/components/JournalLibrary';
 
-export default async function JournalsPage({ searchParams }) {
-  const sp = (await searchParams) || {};
-  const u = new URLSearchParams();
-  Object.entries(sp).forEach(([k, v]) => {
-    if (v) u.set(k, Array.isArray(v) ? v[0] : v);
-  });
-  const qs = u.toString();
-  redirect(`/published-papers${qs ? `?${qs}` : ''}`);
+export const metadata = {
+  title: 'Journals & Volumes',
+  description: 'Explore peer-reviewed journal volumes and quarterly issues by academic year. Open any journal book to inspect and read published research papers.',
+};
+
+export default async function JournalsPage() {
+  const D = await getAll();
+  if (D.error) return <SetupNotice error={D.error} />;
+
+  return <JournalLibrary data={slim(D)} />;
 }
-

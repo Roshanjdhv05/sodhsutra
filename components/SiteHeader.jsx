@@ -9,13 +9,15 @@ import { toast } from '@/lib/toast';
 
 const NAV = [
   ['Home', '/', 'home'],
-  ['About', '/about', 'about'],
+  ['Journals', '/journals', 'journals'],
   ['Published Papers', '/published-papers', 'published-papers'],
+  ['About', '/about', 'about'],
   ['Contact Us', '/contact', 'contact'],
 ];
 
 function activeKey(p) {
   if (p === '/') return 'home';
+  if (p === '/journals') return 'journals';
   if (/^\/(about|editorial-policy|submission-guidelines)/.test(p)) return 'about';
   if (p.startsWith('/published-papers') || p.startsWith('/journals') || p.startsWith('/categories')) return 'published-papers';
   if (p.startsWith('/contact')) return 'contact';

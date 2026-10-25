@@ -459,6 +459,9 @@ fieldset{border:0;padding:0;margin:0 0 18px}.check label{display:flex;gap:10px;a
 .cover-art.cover-photo{display:block}
 .cover-photo img{width:100%;height:100%;object-fit:cover;display:block}
 .cover-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.30),rgba(0,0,0,0) 32%)}
+.cover:has(.cover-photo){background:#fff}
+.cover:has(.cover-photo) .cover-body{background:linear-gradient(180deg,transparent 0%,rgba(15,10,5,.82) 42%,rgba(15,10,5,.95) 100%);color:#fff;border-radius:0 0 3px 3px}
+.cover:has(.cover-photo) .cover-head{background:linear-gradient(180deg,rgba(15,10,5,.65) 0%,transparent 100%);color:#fff;border-radius:3px 3px 0 0}
 .avatar{overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .setup{max-width:760px;margin:60px auto;padding:34px;border:1.5px dashed var(--o2);border-radius:10px;background:#fff}
 .setup code,.prose code{background:var(--o1);padding:2px 6px;border-radius:3px;font-size:.88em}
@@ -556,3 +559,309 @@ noscript .reveal{opacity:1}
 .submission-template-body p:last-child{margin:0}
 .submission-template-body ul{padding-left:20px;margin:4px 0 10px;display:flex;flex-direction:column;gap:3px}
 .submission-template-body li{font-size:.93rem;color:var(--ink2)}
+
+/* ============================================================
+   Journals Book Library & 3D Interactive Books
+   ============================================================ */
+.journal-hero{background:linear-gradient(180deg,#FFF6ED 0%,var(--bg) 100%);border-bottom:1px solid var(--line);padding:clamp(40px,6vw,72px) 0 36px}
+.journal-hero-inner{display:flex;flex-direction:column;gap:16px}
+.journal-stats-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:8px}
+.journal-stat-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;background:#fff;border:1px solid var(--line);font-size:.85rem;color:var(--ink2);box-shadow:var(--sh)}
+.journal-stat-chip strong{color:var(--o7);font-weight:700}
+
+.year-filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:32px 0 20px}
+.year-pill-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:99px;font:600 .88rem var(--sans);background:#fff;border:1.5px solid var(--line);color:var(--ink2);cursor:pointer;transition:all .2s var(--ease)}
+.year-pill-btn:hover{border-color:var(--o);color:var(--o)}
+.year-pill-btn.active{background:var(--o);border-color:var(--o);color:#fff;box-shadow:0 4px 12px -3px rgba(242,106,27,.5)}
+
+.year-section{margin-bottom:clamp(48px,8vw,84px)}
+.year-section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:2px solid var(--line);padding-bottom:14px;margin-bottom:32px;flex-wrap:wrap}
+.year-section-title-wrap{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.year-section-title{font-family:var(--serif);font-size:clamp(1.6rem,3.2vw,2.2rem);font-weight:700;color:var(--ink);margin:0}
+.year-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:var(--o1);color:var(--o7);font:700 .8rem var(--sans);text-transform:uppercase;letter-spacing:.05em}
+
+/* 3D Journal Book Grid */
+.journal-books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:clamp(28px,4vw,44px);perspective:1200px}
+
+/* Individual Book Container */
+.journal-book-card{display:flex;flex-direction:column;align-items:center;cursor:pointer;text-align:center;position:relative;transition:transform .3s var(--ease)}
+.journal-book-card:hover{transform:translateY(-8px)}
+
+/* 3D Realistic Hardcover Journal Book */
+.journal-book-3d{
+  position:relative;
+  width:220px;
+  height:310px;
+  border-radius:3px 10px 10px 3px;
+  background:linear-gradient(135deg,#3A1C0B 0%,#1F1A17 100%);
+  color:#fff;
+  padding:20px 18px 24px 26px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  box-shadow:
+    -6px 0 0 -2px #181310,
+    -10px 0 0 -4px #241A14,
+    inset 4px 0 6px rgba(255,255,255,.15),
+    inset -4px 0 8px rgba(0,0,0,.4),
+    0 16px 28px -10px rgba(40,20,5,.45),
+    0 28px 45px -14px rgba(40,20,5,.3);
+  transform-style:preserve-3d;
+  transition:transform .4s var(--ease),box-shadow .4s var(--ease);
+  overflow:hidden;
+}
+
+.journal-book-card:hover .journal-book-3d{
+  transform:rotateY(-12deg) rotateX(4deg) translateY(-4px);
+  box-shadow:
+    -12px 6px 16px -6px rgba(0,0,0,.5),
+    -16px 0 0 -4px #1c1510,
+    0 24px 38px -10px rgba(40,20,5,.55),
+    0 34px 55px -16px rgba(242,106,27,.3);
+}
+
+/* Spine groove effect on the left */
+.journal-book-spine-groove{
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:14px;
+  width:3px;
+  background:rgba(0,0,0,.45);
+  box-shadow:1px 0 0 rgba(255,255,255,.12);
+  z-index:4;
+}
+
+/* Page edges on right and bottom */
+.journal-book-3d::after{
+  content:"";
+  position:absolute;
+  right:-10px;
+  top:6px;
+  bottom:6px;
+  width:10px;
+  background:repeating-linear-gradient(to right,#F7EFE6 0px,#F7EFE6 1px,#E5D7C6 1px,#E5D7C6 2px);
+  border-radius:0 3px 3px 0;
+  box-shadow:inset -1px 0 2px rgba(0,0,0,.25);
+  transform:skewY(-40deg);
+  transform-origin:left;
+  opacity:0.9;
+}
+.journal-book-3d::before{
+  content:"";
+  position:absolute;
+  left:14px;
+  right:6px;
+  bottom:-8px;
+  height:8px;
+  background:repeating-linear-gradient(to bottom,#F7EFE6 0px,#F7EFE6 1px,#E5D7C6 1px,#E5D7C6 2px);
+  border-radius:0 0 3px 3px;
+  transform:skewX(-45deg);
+  transform-origin:top;
+  opacity:0.85;
+}
+
+/* Cover Art layer */
+.journal-book-art-bg{
+  position:absolute;
+  inset:0;
+  opacity:.32;
+  z-index:1;
+  pointer-events:none;
+}
+.journal-book-art-bg svg{width:100%;height:100%;object-fit:cover}
+.journal-book-art-bg img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* 3D Book with custom cover image */
+.journal-book-3d.has-cover-image{
+  background:#fff;
+  padding:0;
+}
+.journal-book-3d.has-cover-image .journal-book-art-bg{
+  opacity:1;
+  border-radius:4px 10px 10px 4px;
+  overflow:hidden;
+}
+.journal-book-3d.has-cover-image .journal-book-cover-content{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  pointer-events:none;
+}
+.journal-book-3d.has-cover-image .journal-book-brand-tag,
+.journal-book-3d.has-cover-image .journal-book-main-title,
+.journal-book-3d.has-cover-image .journal-book-period,
+.journal-book-3d.has-cover-image .journal-book-year-tag{
+  display:none;
+}
+.journal-book-3d.has-cover-image .journal-book-foot{
+  background:linear-gradient(to top, rgba(15,10,5,.88) 0%, rgba(15,10,5,.4) 70%, transparent 100%);
+  padding:32px 14px 12px 20px;
+  margin:0;
+  border-top:none;
+  border-radius:0 0 10px 4px;
+  pointer-events:auto;
+}
+
+/* Book Cover content */
+.journal-book-cover-content{position:relative;z-index:3;height:100%;display:flex;flex-direction:column;justify-content:space-between;text-align:left}
+.journal-book-brand-tag{font:700 .68rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#FBD3B6;display:flex;align-items:center;gap:6px}
+.journal-book-brand-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--o)}
+
+.journal-book-main-title{font-family:var(--serif);font-size:1.38rem;line-height:1.2;font-weight:700;color:#fff;margin:8px 0 4px;text-shadow:0 2px 4px rgba(0,0,0,.6)}
+.journal-book-period{font-size:.82rem;color:#FFE3CC;margin:0 0 10px;font-weight:500}
+.journal-book-year-tag{display:inline-block;background:rgba(255,255,255,.14);backdrop-filter:blur(4px);padding:3px 8px;border-radius:4px;font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);color:#FFF1E6}
+
+.journal-book-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid rgba(255,255,255,.18);padding-top:10px}
+.journal-book-count-badge{font-size:.75rem;font-weight:600;color:#FFE0C7}
+.journal-book-open-hint{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;font-weight:700;color:#fff;background:var(--o);padding:4px 10px;border-radius:99px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+
+/* Book Metadata below the 3D book */
+.journal-book-meta{margin-top:16px;width:100%;max-width:240px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.journal-book-title-sub{font-family:var(--serif);font-size:1.1rem;font-weight:600;color:var(--ink);margin:0}
+.journal-book-period-sub{font-size:.85rem;color:var(--mut);margin:0}
+.journal-book-papers-badge{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:700;color:var(--o7);background:var(--o1);padding:3px 10px;border-radius:99px;margin-top:4px}
+
+/* ============================================================
+   Open Book Reader Modal / Drawer
+   ============================================================ */
+.book-reader-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(20,15,10,.78);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  z-index:300;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:clamp(16px,3vw,36px);
+  animation:overlayFadeIn .25s var(--ease);
+}
+@keyframes overlayFadeIn{from{opacity:0}to{opacity:1}}
+
+.book-reader-container{
+  background:#fff;
+  border-radius:12px;
+  width:min(1140px,100%);
+  max-height:min(90vh,880px);
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 30px 80px -20px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.1);
+  overflow:hidden;
+  position:relative;
+  animation:bookOpenScale .35s var(--ease);
+}
+@keyframes bookOpenScale{from{opacity:0;transform:scale(.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.book-reader-top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 24px;
+  background:var(--o1);
+  border-bottom:1px solid var(--line);
+}
+.book-reader-breadcrumbs{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--mut)}
+.book-reader-breadcrumbs span{color:var(--ink);font-weight:600}
+.book-reader-close-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r);background:#fff;border:1px solid var(--line);font:600 .85rem var(--sans);color:var(--ink);cursor:pointer;transition:all .2s}
+.book-reader-close-btn:hover{background:var(--o);color:#fff;border-color:var(--o)}
+
+.book-reader-layout{
+  display:grid;
+  grid-template-columns:340px 1fr;
+  flex:1;
+  overflow:hidden;
+}
+@media(max-width:880px){
+  .book-reader-layout{grid-template-columns:1fr;overflow-y:auto}
+  .book-reader-left{border-right:none;border-bottom:1px solid var(--line)}
+}
+
+/* Left Page: Volume Cover & Editorial Front Matter */
+.book-reader-left{
+  background:linear-gradient(180deg,#FFF9F3 0%,#FFF2E5 100%);
+  border-right:1px solid var(--line);
+  padding:clamp(20px,3vw,32px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  overflow-y:auto;
+}
+.book-reader-cover-preview{
+  width:180px;
+  height:250px;
+  border-radius:4px 8px 8px 4px;
+  background:linear-gradient(135deg,#3A1C0B,#1F1A17);
+  box-shadow:-4px 0 0 -1px #110D0A,0 12px 24px -6px rgba(0,0,0,.35);
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:16px;
+  color:#fff;
+  text-align:left;
+}
+.book-reader-cover-preview.has-cover-image{
+  background:#fff;
+  padding:0;
+}
+.book-reader-cover-preview.has-cover-image .journal-book-art-bg{
+  opacity:1;
+  position:absolute;
+  inset:0;
+}
+.book-reader-cover-preview.has-cover-image .journal-book-art-bg img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:4px 8px 8px 4px;
+  display:block;
+}
+.book-reader-cover-preview.has-cover-image .book-reader-cover-preview-content{
+  display:none;
+}
+
+.book-reader-vol-name{font-family:var(--serif);font-size:1.45rem;font-weight:700;color:var(--ink);margin:0 0 6px}
+.book-reader-period-pill{display:inline-block;background:var(--o);color:#fff;font-size:.78rem;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:12px}
+.book-reader-desc{font-size:.88rem;line-height:1.6;color:var(--ink2);margin-bottom:16px;text-align:left}
+.book-reader-details-list{width:100%;text-align:left;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:8px;font-size:.84rem}
+.book-reader-detail-item{display:flex;justify-content:space-between;gap:8px}
+.book-reader-detail-item dt{color:var(--mut)}
+.book-reader-detail-item dd{margin:0;font-weight:600;color:var(--ink)}
+
+/* Right Page: Research Papers Collection inside Volume */
+.book-reader-right{
+  padding:clamp(20px,3vw,32px);
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  background:#fff;
+}
+.book-reader-right-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.book-reader-right-head h3{font-family:var(--serif);font-size:1.4rem;font-weight:700;margin:0}
+.book-reader-paper-search{width:min(280px,100%)}
+
+.book-papers-list{display:flex;flex-direction:column;gap:16px}
+.book-paper-row-item{
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:16px 20px;
+  background:#fff;
+  transition:all .2s var(--ease);
+  position:relative;
+}
+.book-paper-row-item:hover{border-color:var(--o);box-shadow:0 6px 18px -6px rgba(242,106,27,.2)}
+.book-paper-row-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.book-paper-row-title{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--ink);margin:0 0 6px}
+.book-paper-row-title a{color:inherit;transition:color .2s}
+.book-paper-row-title a:hover{color:var(--o6)}
+.book-paper-row-authors{font-size:.86rem;color:var(--ink2);margin:0 0 8px;font-weight:500}
+.book-paper-row-abstract{font-size:.85rem;line-height:1.6;color:var(--mut);margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.book-paper-row-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+

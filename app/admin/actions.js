@@ -249,3 +249,70 @@ export async function deleteMessage(id) {
   const { error } = await supabaseAdmin().from('messages').delete().eq('id', id);
   return error ? fail(nice(error)) : done();
 }
+
+/* ---------- volumes ---------- */
+export async function saveVolume(v) {
+  const g = await guard(); if (g) return g;
+  const name = s(v.name, 150);
+  if (name.length < 2) return fail('Volume name is required (e.g., Volume 1 - Issue 1).');
+  const year_label = s(v.year_label, 50);
+  if (!year_label) return fail('Academic year is required (e.g., 2026- 2027).');
+
+  const row = {
+    name,
+    year_label,
+    period_label: s(v.period_label, 100),
+    volume_no: Math.max(1, int(v.volume_no, 1)),
+    issue_no: Math.max(1, int(v.issue_no, 1)),
+    description: s(v.description, 1000),
+    cover_url: nul(v.cover_url, 600),
+    art_style: ((int(v.art_style) % 8) + 8) % 8,
+    art_theme: ((int(v.art_theme) % 6) + 6) % 6,
+    art_seed: Math.max(1, int(v.art_seed, 1)),
+    published: v.published !== false,
+  };
+
+  const paperIds = [...new Set(Array.isArray(v.paperIds) ? v.paperIds : [])];
+  const sb = supabaseAdmin();
+
+  let id = v.id;
+  try {
+    if (id) {
+      const { data: old } = await sb.from('journal_volumes').select('cover_url').eq('id', id).maybeSingle();
+      const { error } = await sb.from('journal_volumes').update(row).eq('id', id);
+      if (error) return fail(nice(error));
+      if (old?.cover_url && old.cover_url !== row.cover_url) await removeCover(sb, old.cover_url);
+    } else {
+      const { data, error } = await sb.from('journal_volumes').insert(row).select('id').single();
+      if (error) return fail(nice(error));
+      id = data.id;
+    }
+
+    // Update junction table volume_papers
+    await sb.from('volume_papers').delete().eq('volume_id', id);
+    if (paperIds.length > 0) {
+      const items = paperIds.map((paper_id, i) => ({
+        volume_id: id,
+        paper_id,
+        position: i + 1,
+      }));
+      const { error: insErr } = await sb.from('volume_papers').insert(items);
+      if (insErr) return fail(nice(insErr));
+    }
+  } catch (err) {
+    return fail(nice(err));
+  }
+
+  return done({ id });
+}
+
+export async function deleteVolume(id) {
+  const g = await guard(); if (g) return g;
+  const sb = supabaseAdmin();
+  const { data } = await sb.from('journal_volumes').select('cover_url').eq('id', id).maybeSingle();
+  const { error } = await sb.from('journal_volumes').delete().eq('id', id);
+  if (error) return fail(nice(error));
+  if (data?.cover_url) await removeCover(sb, data.cover_url);
+  return done();
+}
+

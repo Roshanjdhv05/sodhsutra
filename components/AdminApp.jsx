@@ -6,6 +6,7 @@ import CoverUpload from './CoverUpload';
 import {
   adminLogin, adminLogout, saveCategory, deleteCategory, saveAuthor, deleteAuthor, savePaper, deletePaper,
   saveNews, deleteNews, setSubmissionStatus, deleteSubmission, publishSubmission, deleteMessage,
+  saveVolume, deleteVolume,
 } from '@/app/admin/actions';
 import { fmt, slugify } from '@/lib/helpers';
 
@@ -279,6 +280,164 @@ function NewsForm({ row, data, onSave, onClose }) {
   );
 }
 
+function VolumeForm({ row, data, onSave, onClose }) {
+  const [f, setF] = useState(() => ({
+    name: 'Volume 1 - Issue 1',
+    year_label: '2026- 2027',
+    period_label: 'July- September 2026',
+    volume_no: 1,
+    issue_no: 1,
+    description: '',
+    cover_url: '',
+    art_style: 0,
+    art_theme: 0,
+    art_seed: 101,
+    paperIds: [],
+    published: true,
+    ...(row || {}),
+  }));
+  const [paperSearch, setPaperSearch] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
+  const togglePaper = (id) => {
+    setF((s) => ({
+      ...s,
+      paperIds: s.paperIds.includes(id)
+        ? s.paperIds.filter((x) => x !== id)
+        : [...s.paperIds, id],
+    }));
+  };
+
+  const filteredPapers = useMemo(() => {
+    const q = paperSearch.trim().toLowerCase();
+    if (!q) return data.papers;
+    return data.papers.filter((p) => {
+      const matchTitle = (p.title || '').toLowerCase().includes(q);
+      const matchCat = (p.category_slug || '').toLowerCase().includes(q);
+      const matchInst = (p.institution || '').toLowerCase().includes(q);
+      return matchTitle || matchCat || matchInst;
+    });
+  }, [data.papers, paperSearch]);
+
+  async function submit(e) {
+    e.preventDefault();
+    setBusy(true);
+    setErr('');
+    const r = await onSave({ ...f, id: row?.id });
+    setBusy(false);
+    if (!r.ok) setErr(r.error);
+  }
+
+  const applyPreset = (vNo, iNo, name, period) => {
+    setF((s) => ({ ...s, volume_no: vNo, issue_no: iNo, name, period_label: period }));
+  };
+
+  return (
+    <form onSubmit={submit} noValidate>
+      <div className="formgrid c2">
+        <div className="full" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mut)', alignSelf: 'center' }}>Quick Presets:</span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 1, 'Volume 1 - Issue 1', 'July- September 2026')}>Vol 1 · Issue 1 (Jul-Sep)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 2, 'Volume 1 - Issue 2', 'October - December 2026')}>Vol 1 · Issue 2 (Oct-Dec)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 3, 'Volume 1 - Issue 3', 'January - March 2027')}>Vol 1 · Issue 3 (Jan-Mar)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 4, 'Volume 1 - Issue 4', 'April - June 2027')}>Vol 1 · Issue 4 (Apr-Jun)</button>
+        </div>
+
+        <F id="v-name" label="Volume Name *" hint="e.g. Volume 1 - Issue 1">
+          <input id="v-name" className="input" value={f.name} onChange={(e) => set('name', e.target.value)} autoFocus required />
+        </F>
+        <F id="v-year" label="Academic Year *" hint="e.g. 2026- 2027">
+          <input id="v-year" className="input" value={f.year_label} onChange={(e) => set('year_label', e.target.value)} required />
+        </F>
+        <F id="v-period" label="Period / Quarter" hint="e.g. July- September 2026">
+          <input id="v-period" className="input" value={f.period_label} onChange={(e) => set('period_label', e.target.value)} />
+        </F>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <F id="v-vol" label="Volume No">
+            <input id="v-vol" className="input" type="number" min="1" value={f.volume_no} onChange={(e) => set('volume_no', e.target.value)} />
+          </F>
+          <F id="v-iss" label="Issue No">
+            <input id="v-iss" className="input" type="number" min="1" value={f.issue_no} onChange={(e) => set('issue_no', e.target.value)} />
+          </F>
+        </div>
+        <div className="full">
+          <CoverUpload id="v-cover" label="Custom Cover Image (optional, auto-compressed)" value={f.cover_url} onChange={(u) => set('cover_url', u)} />
+        </div>
+        <F id="v-style" label="Procedural Art Style">
+          <select id="v-style" className="select" value={f.art_style} onChange={(e) => set('art_style', +e.target.value)}>
+            {STYLES.map((s, i) => <option key={s} value={i}>{s}</option>)}
+          </select>
+        </F>
+        <F id="v-theme" label="Cover Theme Colour">
+          <select id="v-theme" className="select" value={f.art_theme} onChange={(e) => set('art_theme', +e.target.value)}>
+            {THEMES.map((s, i) => <option key={s} value={i}>{s}</option>)}
+          </select>
+        </F>
+        <F id="v-desc" label="Description / Editorial Note" full>
+          <textarea id="v-desc" className="input" rows={3} value={f.description} onChange={(e) => set('description', e.target.value)} placeholder="Summary of this issue's focus and theme..." />
+        </F>
+
+        {/* Paper Selection with Live Search */}
+        <div className="full field" style={{ marginTop: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <label style={{ margin: 0, fontWeight: 700 }}>
+              Select Papers in which it should be shown ({f.paperIds.length} selected)
+            </label>
+            {f.paperIds.length > 0 ? (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => set('paperIds', [])} style={{ padding: '3px 8px', fontSize: '0.78rem' }}>
+                Clear Selected
+              </button>
+            ) : null}
+          </div>
+          <p className="hint" style={{ marginBottom: '10px' }}>
+            Search and select the papers that will appear inside this volume book.
+          </p>
+
+          <div className="search-box small" style={{ marginBottom: '12px' }}>
+            <Icon name="search" size={16} />
+            <input
+              type="search"
+              placeholder="Search papers by title, category, institution..."
+              value={paperSearch}
+              onChange={(e) => setPaperSearch(e.target.value)}
+            />
+            {paperSearch ? (
+              <button type="button" className="icon-btn" onClick={() => setPaperSearch('')} style={{ width: 24, height: 24 }}>
+                <Icon name="x" size={14} />
+              </button>
+            ) : null}
+          </div>
+
+          <div className="pickbox scroll" style={{ maxHeight: '240px', border: '1px solid var(--line)', borderRadius: 'var(--r)', padding: '8px', overflowY: 'auto' }}>
+            {filteredPapers.map((p) => {
+              const pos = f.paperIds.indexOf(p.id);
+              const isChecked = pos >= 0;
+              return (
+                <label key={p.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 4px', borderBottom: '1px solid var(--line)', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={isChecked} onChange={() => togglePaper(p.id)} style={{ marginTop: '4px' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--ink)' }}>{p.title}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--mut)', display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '2px' }}>
+                      <span className="chip" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>{p.category_slug}</span>
+                      <span>{fmt(p.published_on)}</span>
+                      {p.institution ? <span>· {p.institution}</span> : null}
+                    </div>
+                  </div>
+                  {isChecked ? <span className="ord" style={{ alignSelf: 'center' }}>#{pos + 1}</span> : null}
+                </label>
+              );
+            })}
+            {!filteredPapers.length ? <div className="muted" style={{ padding: '12px', textAlign: 'center' }}>No papers found matching “{paperSearch}”.</div> : null}
+          </div>
+        </div>
+      </div>
+      <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save Volume' : 'Create Volume'} />
+    </form>
+  );
+}
+
 /* ---------- main ---------- */
 export default function AdminApp({ data }) {
   const router = useRouter();
@@ -310,7 +469,15 @@ export default function AdminApp({ data }) {
   async function logout() { await adminLogout(); router.refresh(); }
 
   const match = (text) => !q.trim() || text.toLowerCase().includes(q.trim().toLowerCase());
-  const tabs = [['papers', 'Papers', data.papers.length], ['categories', 'Categories', data.categories.length], ['authors', 'Authors', data.authors.length], ['news', 'News', data.news.length], ['submissions', 'Submissions', pending || data.submissions.length], ['messages', 'Messages', data.messages.length]];
+  const tabs = [
+    ['papers', 'Papers', data.papers.length],
+    ['volumes', 'Volumes', (data.volumes || []).length],
+    ['categories', 'Categories', data.categories.length],
+    ['authors', 'Authors', data.authors.length],
+    ['news', 'News', data.news.length],
+    ['submissions', 'Submissions', pending || data.submissions.length],
+    ['messages', 'Messages', data.messages.length],
+  ];
 
   const searchBox = <div className="search-box small"><Icon name="search" size={18} /><label className="sr" htmlFor="adm-q">Filter</label><input id="adm-q" type="search" placeholder="Filter…" value={q} onChange={(e) => setQ(e.target.value)} /></div>;
 
@@ -321,7 +488,7 @@ export default function AdminApp({ data }) {
         <div className="row" style={{ margin: 0 }}><a className="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener noreferrer">View site</a><button className="btn btn-ghost btn-sm" onClick={logout}><Icon name="logout" size={16} /> Log out</button></div>
       </div>
       <div className="admin-stats">
-        {[['Papers', data.papers.length], ['Categories', data.categories.length], ['Authors', data.authors.length], ['News', data.news.length], ['New submissions', pending]].map(([l, v]) => <div className="admin-stat" key={l}><strong>{v}</strong><span>{l}</span></div>)}
+        {[['Papers', data.papers.length], ['Volumes', (data.volumes || []).length], ['Categories', data.categories.length], ['Authors', data.authors.length], ['News', data.news.length], ['New submissions', pending]].map(([l, v]) => <div className="admin-stat" key={l}><strong>{v}</strong><span>{l}</span></div>)}
       </div>
       {flash?.ok ? <p className="msg-ok" role="status">{flash.ok}</p> : null}
       {flash?.err ? <p className="msg-err" role="alert">{flash.err}</p> : null}
@@ -346,6 +513,80 @@ export default function AdminApp({ data }) {
               </tr>
             ))}
           </tbody></table></div>
+        </section>
+      )}
+
+      {tab === 'volumes' && (
+        <section>
+          <div className="panel-head">
+            <div>
+              <h2>Journal Volumes &amp; Issues</h2>
+              <p className="muted" style={{ margin: 0, fontSize: '0.88rem' }}>
+                Organize research papers into quarterly volumes by academic year (e.g. 2026- 2027).
+              </p>
+            </div>
+            <div className="row" style={{ margin: 0 }}>
+              {searchBox}
+              <button className="btn btn-primary btn-sm" onClick={() => setModal({ kind: 'volume', row: null })}>
+                <Icon name="plus" size={16} /> New Volume
+              </button>
+            </div>
+          </div>
+          <div className="table-wrap">
+            <table className="atable">
+              <thead>
+                <tr>
+                  <th>Cover</th>
+                  <th>Volume &amp; Issue</th>
+                  <th>Academic Year</th>
+                  <th>Period</th>
+                  <th>Papers Included</th>
+                  <th>Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {(data.volumes || [])
+                  .filter((v) => match(v.name + ' ' + v.year_label + ' ' + (v.period_label || '')))
+                  .map((v) => (
+                    <tr key={v.id}>
+                      <td><Thumb url={v.cover_url} /></td>
+                      <td className="ttl">
+                        {v.name}
+                        {v.description ? <span className="sub">{v.description.slice(0, 70)}…</span> : null}
+                      </td>
+                      <td><strong>{v.year_label}</strong></td>
+                      <td>{v.period_label || '—'}</td>
+                      <td>
+                        <span className="pill ok">{(v.paperIds || []).length} papers</span>
+                      </td>
+                      <td>
+                        <span className={`pill ${v.published !== false ? 'ok' : 'warn'}`}>
+                          {v.published !== false ? 'Published' : 'Draft'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="acts">
+                          <button className="btn btn-ghost btn-sm" onClick={() => setModal({ kind: 'volume', row: v })}>
+                            <Icon name="edit" size={15} /> Edit
+                          </button>
+                          <button className="btn btn-danger btn-sm" onClick={() => remove(deleteVolume, v.id, 'volume')}>
+                            <Icon name="trash" size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                {!(data.volumes || []).length ? (
+                  <tr>
+                    <td colSpan={7} className="muted" style={{ textAlign: 'center', padding: '24px' }}>
+                      No volumes saved in the database yet. Click <strong>“New Volume”</strong> above to create your first volume, or run the provided SQL in Supabase.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
@@ -431,6 +672,7 @@ export default function AdminApp({ data }) {
       )}
 
       {modal?.kind === 'category' && <Modal title={modal.row ? 'Edit category' : 'New category'} onClose={() => setModal(null)}><CategoryForm row={modal.row} onClose={() => setModal(null)} onSave={(p) => save(saveCategory, p, modal.row ? 'Category saved.' : 'Category created.')} /></Modal>}
+      {modal?.kind === 'volume' && <Modal title={modal.row ? 'Edit Volume' : 'New Volume'} onClose={() => setModal(null)}><VolumeForm row={modal.row} data={data} onClose={() => setModal(null)} onSave={(p) => save(saveVolume, p, modal.row ? 'Volume saved.' : 'Volume created.')} /></Modal>}
       {modal?.kind === 'author' && <Modal title={modal.row ? 'Edit author' : 'New author'} onClose={() => setModal(null)}><AuthorForm row={modal.row} onClose={() => setModal(null)} onSave={(p) => save(saveAuthor, p, modal.row ? 'Author saved.' : 'Author created.')} /></Modal>}
       {modal?.kind === 'paper' && <Modal title={modal.row ? 'Edit paper' : 'New paper'} onClose={() => setModal(null)}><PaperForm row={modal.row} data={data} onClose={() => setModal(null)} onSave={(p) => save(savePaper, p, modal.row ? 'Paper saved.' : 'Paper published.')} /></Modal>}
       {modal?.kind === 'news' && <Modal title={modal.row ? 'Edit article' : 'New article'} onClose={() => setModal(null)}><NewsForm row={modal.row} data={data} onClose={() => setModal(null)} onSave={(p) => save(saveNews, p, modal.row ? 'Article saved.' : 'Article published.')} /></Modal>}
