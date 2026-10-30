@@ -266,7 +266,7 @@ export function PageHead({ eyebrow, title, intro, crumbs, className = 'page-head
 }
 
 export function DemoNote({ children }) {
-  return <p className="demo-note"><Icon name="info" size={16} /> {children || 'Demonstration data — sample authors, institutions and papers are fictional.'}</p>;
+  return null;
 }
 
 export function Empty({ message, children }) {

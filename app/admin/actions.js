@@ -108,18 +108,64 @@ export async function savePaper(p) {
   const title = s(p.title, 300);
   if (title.length < 5) return fail('Title must be at least 5 characters.');
   if (s(p.abstract).length < 20) return fail('Please write an abstract (at least 20 characters).');
-  if (!p.category_slug) return fail('Choose a category.');
   if (!isDate(s(p.published_on, 10))) return fail('Choose a valid publication date.');
   if (p.paper_url && !okUrl(p.paper_url)) return fail('Paper link must start with http:// or https://');
-  const authorIds = [...new Set(Array.isArray(p.authorIds) ? p.authorIds : [])];
-  if (!authorIds.length) return fail('Select at least one author.');
+
   const sb = supabaseAdmin();
+
+  // If user selected to add a new category or provided a new category name
+  let category_slug = p.category_slug;
+  if (p.category_slug === '__new__' || (p.new_category_name && p.new_category_name.trim())) {
+    const catName = s(p.new_category_name, 120);
+    if (!catName || catName.length < 2) return fail('Please enter a name for the new category.');
+    const { data: existingCat } = await sb.from('categories').select('slug').ilike('name', catName).limit(1).maybeSingle();
+    if (existingCat) {
+      category_slug = existingCat.slug;
+    } else {
+      const newSlug = await uniqueSlug(sb, 'categories', catName);
+      const { data: createdCat, error: catErr } = await sb.from('categories').insert({
+        name: catName,
+        short_name: catName,
+        slug: newSlug,
+        icon: 'book',
+        description: `Research category for ${catName}`,
+        sort_order: 99,
+      }).select('slug').single();
+      if (catErr) return fail(nice(catErr));
+      category_slug = createdCat.slug;
+    }
+  }
+
+  if (!category_slug || category_slug === '__new__') return fail('Choose or create a category.');
+
+  // Handle authors: if typed as comma-separated text, resolve or create author records
+  let authorIds = [];
+  if (p.authors_text && p.authors_text.trim()) {
+    const names = p.authors_text.split(/[,;\n]+/).map((x) => s(x, 120)).filter(Boolean);
+    for (const name of names) {
+      const { data: found } = await sb.from('authors').select('id').ilike('name', name).limit(1).maybeSingle();
+      if (found) {
+        if (!authorIds.includes(found.id)) authorIds.push(found.id);
+      } else {
+        const slug = await uniqueSlug(sb, 'authors', name);
+        const { data: created, error: authErr } = await sb.from('authors').insert({
+          slug, name, type: 'researcher', designation: '', institution: s(p.institution, 200) || 'Independent', department: '', interests: [], bio: '',
+        }).select('id').single();
+        if (authErr) return fail(nice(authErr));
+        authorIds.push(created.id);
+      }
+    }
+  } else if (Array.isArray(p.authorIds) && p.authorIds.length) {
+    authorIds = [...new Set(p.authorIds)];
+  }
+
+  if (!authorIds.length) return fail('Please enter at least one author name.');
 
   let institution = s(p.institution, 200);
   if (!institution) { const { data } = await sb.from('authors').select('institution').eq('id', authorIds[0]).maybeSingle(); institution = data?.institution || 'Independent'; }
 
   const row = {
-    title, abstract: s(p.abstract), category_slug: p.category_slug, category2_slug: nul(p.category2_slug, 80) === p.category_slug ? null : nul(p.category2_slug, 80),
+    title, abstract: s(p.abstract), category_slug, category2_slug: nul(p.category2_slug, 80) === category_slug ? null : nul(p.category2_slug, 80),
     institution, published_on: s(p.published_on, 10), keywords: list(p.keywords).slice(0, 12), views: Math.max(0, int(p.views)),
     content_type: s(p.content_type, 60) || 'Original Research', format: ['emp', 'rev', 'ess', 'cas'].includes(p.format) ? p.format : 'emp',
     featured: !!p.featured, doi: nul(p.doi, 120), paper_url: nul(p.paper_url, 800), peer_reviewed: !!p.peer_reviewed, is_demo: !!p.is_demo,

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon, ICON_NAMES } from './Icon';
 import CoverUpload from './CoverUpload';
+import PdfUpload from './PdfUpload';
 import {
   adminLogin, adminLogout, saveCategory, deleteCategory, saveAuthor, deleteAuthor, savePaper, deletePaper,
   saveNews, deleteNews, setSubmissionStatus, deleteSubmission, publishSubmission, deleteMessage,
@@ -165,6 +166,8 @@ function PaperForm({ row, data, onSave, onClose }) {
     title: '', slug: '', abstract: '', category_slug: data.categories[0]?.slug || '', category2_slug: '', authorIds: [], published_on: today(), keywords: '',
     views: 0, content_type: 'Original Research', format: 'rev', institution: '', featured: false, doi: '', peer_reviewed: false, is_demo: false,
     paper_url: '', cover_url: '', art_style: (n * 5 + 1) % 8, art_theme: (n * 7 + 2) % 6, art_seed: n + 1,
+    authors_text: row ? (row.authorIds || []).map((id) => data.authors.find((a) => a.id === id)?.name).filter(Boolean).join(', ') : '',
+    new_category_name: '',
     introduction: initialSections.introduction,
     scope_and_approach: initialSections.scope_and_approach,
     literature_review: initialSections.literature_review,
@@ -182,6 +185,8 @@ function PaperForm({ row, data, onSave, onClose }) {
       published_on: String(row.published_on).slice(0, 10),
       keywords: (row.keywords || []).join(', '),
       refs_text: (row.refs || []).join('\n'),
+      authors_text: (row.authorIds || []).map((id) => data.authors.find((a) => a.id === id)?.name).filter(Boolean).join(', '),
+      new_category_name: '',
       introduction: initialSections.introduction,
       scope_and_approach: initialSections.scope_and_approach,
       literature_review: initialSections.literature_review,
@@ -192,7 +197,6 @@ function PaperForm({ row, data, onSave, onClose }) {
   }));
   const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
-  const pick = (id) => setF((s) => ({ ...s, authorIds: s.authorIds.includes(id) ? s.authorIds.filter((x) => x !== id) : [...s.authorIds, id] }));
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
@@ -215,25 +219,36 @@ function PaperForm({ row, data, onSave, onClose }) {
       <div className="formgrid c2">
         <F id="p-title" label="Title *" full><input id="p-title" className="input" value={f.title} onChange={(e) => set('title', e.target.value)} autoFocus /></F>
         <F id="p-abs" label="Abstract *" hint="Appears under #abstract in contents." full><textarea id="p-abs" className="input" rows={4} value={f.abstract} onChange={(e) => set('abstract', e.target.value)} /></F>
-        <F id="p-cat" label="Category *"><select id="p-cat" className="select" value={f.category_slug} onChange={(e) => set('category_slug', e.target.value)}>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></F>
-        <F id="p-cat2" label="Second category (optional)"><select id="p-cat2" className="select" value={f.category2_slug} onChange={(e) => set('category2_slug', e.target.value)}><option value="">None</option>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></F>
-        <F id="p-auth" label="Authors * (the order you tick them is the order shown)" full>
-          <div className="pickbox" id="p-auth">
-            {data.authors.map((a) => { const i = f.authorIds.indexOf(a.id); return (
-              <label key={a.id}><input type="checkbox" checked={i >= 0} onChange={() => pick(a.id)} /> {a.name} <small className="muted">· {a.institution || '—'}</small>{i >= 0 ? <span className="ord">{i + 1}</span> : null}</label>
-            ); })}
-            {!data.authors.length ? <span className="muted">No authors yet — add one in the Authors tab first.</span> : null}
-          </div>
+        <F id="p-cat" label="Category *">
+          <select id="p-cat" className="select" value={f.category_slug} onChange={(e) => set('category_slug', e.target.value)}>
+            <option value="">Select a category</option>
+            {data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+            <option value="__new__">+ Add new category...</option>
+          </select>
+        </F>
+        {f.category_slug === '__new__' ? (
+          <F id="p-cat-new" label="New Category Name *" hint="Will automatically create and link this category.">
+            <input id="p-cat-new" className="input" placeholder="e.g. Quantum Computing" value={f.new_category_name} onChange={(e) => set('new_category_name', e.target.value)} autoFocus required />
+          </F>
+        ) : (
+          <F id="p-cat2" label="Second category (optional)"><select id="p-cat2" className="select" value={f.category2_slug} onChange={(e) => set('category2_slug', e.target.value)}><option value="">None</option>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></F>
+        )}
+        <F id="p-auth" label="Authors * (type author names, separated by commas)" hint="e.g. Dr. A. Sharma, Prof. R. Patel. New authors are created automatically." full>
+          <input id="p-auth" className="input" placeholder="e.g. Dr. A. Sharma, Prof. R. Patel" value={f.authors_text} onChange={(e) => set('authors_text', e.target.value)} required />
         </F>
         <F id="p-date" label="Publication date *"><input id="p-date" className="input" type="date" value={f.published_on} onChange={(e) => set('published_on', e.target.value)} /></F>
         <F id="p-inst" label="Institution" hint="Blank = first author’s institution."><input id="p-inst" className="input" value={f.institution} onChange={(e) => set('institution', e.target.value)} /></F>
-        <F id="p-type" label="Content type"><select id="p-type" className="select" value={f.content_type} onChange={(e) => set('content_type', e.target.value)}>{CONTENT_TYPES.map((t) => <option key={t}>{t}</option>)}</select></F>
-        <F id="p-format" label="Page layout" hint="Decides the section outline of demo text."><select id="p-format" className="select" value={f.format} onChange={(e) => set('format', e.target.value)}>{FORMATS.map((t) => <option key={t[0]} value={t[0]}>{t[1]}</option>)}</select></F>
         <F id="p-kw" label="Keywords" hint="Comma separated." full><input id="p-kw" className="input" value={f.keywords} onChange={(e) => set('keywords', e.target.value)} /></F>
-        <F id="p-link" label="Paper link" hint="Public link to the manuscript (Drive, arXiv, …). Shown as “Open Paper Link”." full><input id="p-link" className="input" type="url" value={f.paper_url} onChange={(e) => set('paper_url', e.target.value)} placeholder="https://" /></F>
+        <div className="full">
+          <PdfUpload
+            id="p-pdf"
+            label="Upload manuscript (PDF) *"
+            value={f.paper_url}
+            onChange={(u) => set('paper_url', u)}
+          />
+        </div>
         <F id="p-style" label="Generated art style" hint="Geometric art style for the paper detail page."><select id="p-style" className="select" value={f.art_style} onChange={(e) => set('art_style', +e.target.value)}>{STYLES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
         <F id="p-theme" label="Cover colour"><select id="p-theme" className="select" value={f.art_theme} onChange={(e) => set('art_theme', +e.target.value)}>{THEMES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
-        <F id="p-views" label="Views"><input id="p-views" className="input" type="number" min="0" value={f.views} onChange={(e) => set('views', e.target.value)} /></F>
         <F id="p-doi" label="DOI (only if verified)"><input id="p-doi" className="input" value={f.doi} onChange={(e) => set('doi', e.target.value)} placeholder="10.xxxx/xxxxx" /></F>
         <F id="p-intro" label="Introduction (optional)" hint="Appears under #introduction in contents." full><textarea id="p-intro" className="input" rows={4} value={f.introduction} onChange={(e) => set('introduction', e.target.value)} placeholder="Write the introduction here..." /></F>
         <F id="p-scope" label="Scope and Approach (optional)" hint="Appears under #scope-and-approach in contents." full><textarea id="p-scope" className="input" rows={4} value={f.scope_and_approach} onChange={(e) => set('scope_and_approach', e.target.value)} placeholder="Describe the scope and approach..." /></F>
@@ -473,7 +488,6 @@ export default function AdminApp({ data }) {
     ['papers', 'Papers', data.papers.length],
     ['volumes', 'Volumes', (data.volumes || []).length],
     ['categories', 'Categories', data.categories.length],
-    ['authors', 'Authors', data.authors.length],
     ['news', 'News', data.news.length],
     ['submissions', 'Submissions', pending || data.submissions.length],
     ['messages', 'Messages', data.messages.length],
@@ -488,7 +502,7 @@ export default function AdminApp({ data }) {
         <div className="row" style={{ margin: 0 }}><a className="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener noreferrer">View site</a><button className="btn btn-ghost btn-sm" onClick={logout}><Icon name="logout" size={16} /> Log out</button></div>
       </div>
       <div className="admin-stats">
-        {[['Papers', data.papers.length], ['Volumes', (data.volumes || []).length], ['Categories', data.categories.length], ['Authors', data.authors.length], ['News', data.news.length], ['New submissions', pending]].map(([l, v]) => <div className="admin-stat" key={l}><strong>{v}</strong><span>{l}</span></div>)}
+        {[['Papers', data.papers.length], ['Volumes', (data.volumes || []).length], ['Categories', data.categories.length], ['News', data.news.length], ['New submissions', pending]].map(([l, v]) => <div className="admin-stat" key={l}><strong>{v}</strong><span>{l}</span></div>)}
       </div>
       {flash?.ok ? <p className="msg-ok" role="status">{flash.ok}</p> : null}
       {flash?.err ? <p className="msg-err" role="alert">{flash.err}</p> : null}
@@ -600,21 +614,6 @@ export default function AdminApp({ data }) {
                 <td className="ttl">{c.name}<span className="sub">{c.description}</span></td><td>{c.slug}</td>
                 <td>{data.papers.filter((p) => p.category_slug === c.slug || p.category2_slug === c.slug).length}</td><td>{c.sort_order}</td>
                 <td><div className="acts"><button className="btn btn-ghost btn-sm" onClick={() => setModal({ kind: 'category', row: c })}><Icon name="edit" size={15} /> Edit</button><button className="btn btn-danger btn-sm" onClick={() => remove(deleteCategory, c.id, 'category')}><Icon name="trash" size={15} /></button></div></td>
-              </tr>
-            ))}
-          </tbody></table></div>
-        </section>
-      )}
-
-      {tab === 'authors' && (
-        <section>
-          <div className="panel-head"><h2>Authors</h2><div className="row" style={{ margin: 0 }}>{searchBox}<button className="btn btn-primary btn-sm" onClick={() => setModal({ kind: 'author', row: null })}><Icon name="plus" size={16} /> New author</button></div></div>
-          <div className="table-wrap"><table className="atable"><thead><tr><th>Name</th><th>Type</th><th>Institution</th><th>Papers</th><th /></tr></thead><tbody>
-            {data.authors.filter((a) => match(a.name + ' ' + (a.institution || ''))).map((a) => (
-              <tr key={a.id}>
-                <td className="ttl">{a.name}<span className="sub">{a.designation}</span></td><td>{a.type}</td><td>{a.institution}</td>
-                <td>{data.papers.filter((p) => p.authorIds.includes(a.id)).length}</td>
-                <td><div className="acts"><button className="btn btn-ghost btn-sm" onClick={() => setModal({ kind: 'author', row: a })}><Icon name="edit" size={15} /> Edit</button><button className="btn btn-danger btn-sm" onClick={() => remove(deleteAuthor, a.id, 'author')}><Icon name="trash" size={15} /></button></div></td>
               </tr>
             ))}
           </tbody></table></div>

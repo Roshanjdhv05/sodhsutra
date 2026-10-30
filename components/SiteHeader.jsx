@@ -9,8 +9,8 @@ import { toast } from '@/lib/toast';
 
 const NAV = [
   ['Home', '/', 'home'],
-  ['Journals', '/journals', 'journals'],
-  ['Published Papers', '/published-papers', 'published-papers'],
+  ['Issues', '/journals', 'journals'],
+  ['Articles', '/published-papers', 'published-papers'],
   ['About', '/about', 'about'],
   ['Contact Us', '/contact', 'contact'],
 ];
@@ -24,7 +24,7 @@ function activeKey(p) {
   return '';
 }
 
-export function Logo({ className = '', size = 40 }) {
+export function Logo({ className = '', size = 52 }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -77,6 +77,23 @@ export default function SiteHeader({ data }) {
           <div className="nav-actions">
             <button className="icon-btn" onClick={() => setSearchOpen(true)} aria-label="Open search"><Icon name="search" /></button>
             <Link className="btn btn-primary btn-sm" href="/submit">Submit Research</Link>
+            <a
+              href="https://www.mccmulund.ac.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="college-logo-link"
+              title="Parle Tilak Vidyalaya Association's Mulund College of Commerce"
+              aria-label="Mulund College of Commerce website"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/mcc-logo.png"
+                alt="Mulund College of Commerce"
+                className="college-logo-img"
+                width={48}
+                height={58}
+              />
+            </a>
             <button className="icon-btn menu-btn" onClick={() => setDrawer((d) => !d)} aria-label={drawer ? 'Close menu' : 'Open menu'} aria-expanded={drawer} aria-controls="drawer"><Icon name={drawer ? 'x' : 'menu'} /></button>
           </div>
         </div>

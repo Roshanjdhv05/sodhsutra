@@ -3,8 +3,8 @@ import { PageHead, SetupNotice } from '@/components/ui';
 import JournalsClient from '@/components/JournalsClient';
 
 export const metadata = {
-  title: 'Published Papers',
-  description: 'Browse all published research papers, filter by category, author type, or publication year.',
+  title: 'Articles',
+  description: 'Browse all published research articles, filter by category, author type, or publication year.',
 };
 
 export default async function PublishedPapersPage({ searchParams }) {
@@ -16,9 +16,9 @@ export default async function PublishedPapersPage({ searchParams }) {
     <>
       <PageHead
         eyebrow="Published Research"
-        title="Published Papers"
-        intro="Search, filter, and explore all published papers in the collection. Each card opens the full article page."
-        crumbs={[['Home', '/'], ['Published Papers']]}
+        title="Articles"
+        intro="Search, filter, and explore all published articles in the collection. Each card opens the full article page."
+        crumbs={[['Home', '/'], ['Articles']]}
       />
       <JournalsClient
         data={slim(D)}

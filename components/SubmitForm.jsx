@@ -2,10 +2,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from './Icon';
-import CoverUpload from './CoverUpload';
+import PdfUpload from './PdfUpload';
 import { submitManuscript } from '@/app/actions';
 
-const empty = { title: '', abstract: '', authorName: '', authorEmail: '', institution: '', category: '', keywords: '', paperUrl: '', coverUrl: '', declaration: false, consent: false, website: '' };
+const empty = { title: '', abstract: '', authorName: '', authorEmail: '', institution: '', category: '', newCategory: '', keywords: '', pdfUrl: '', declaration: false, consent: false, website: '' };
 const words = (s) => (s.trim() ? s.trim().split(/\s+/).length : 0);
 
 function Field({ id, label, hint, error, children }) {
@@ -38,13 +38,14 @@ export default function SubmitForm({ categories }) {
     const e = {};
     if (f.title.trim().length < 10) e.title = 'Enter a title of at least 10 characters.';
     if (wc < 50) e.abstract = `Abstract is too short (${wc} words; minimum 50).`; else if (wc > 300) e.abstract = `Abstract is too long (${wc} words; maximum 300).`;
-    if (f.authorName.trim().length < 2) e.authorName = 'Enter the author’s name.';
+    if (f.authorName.trim().length < 2) e.authorName = 'Enter the author\u2019s name.';
     if (!/^\S+@\S+\.\S+$/.test(f.authorEmail.trim())) e.authorEmail = 'Enter a valid email address.';
-    if (!f.institution.trim()) e.institution = 'Enter an institution (or “Independent”).';
+    if (!f.institution.trim()) e.institution = 'Enter an institution (or \u201cIndependent\u201d).';
     if (!f.category) e.category = 'Choose a research category.';
+    if (f.category === '__new__' && !(f.newCategory || '').trim()) e.newCategory = 'Enter the name for the new category.';
     const kw = f.keywords.split(',').map((k) => k.trim()).filter(Boolean);
     if (kw.length < 3 || kw.length > 8) e.keywords = 'Enter 3 to 8 comma-separated keywords.';
-    try { const u = new URL(f.paperUrl.trim()); if (!/^https?:$/.test(u.protocol)) throw new Error(); } catch { e.paperUrl = 'Paste a valid link starting with http:// or https://'; }
+    if (!f.pdfUrl) e.pdfUrl = 'Please upload your manuscript PDF before submitting.';
     if (!f.declaration) e.declaration = 'Please confirm the declaration of originality.';
     if (!f.consent) e.consent = 'Please consent to the policies to continue.';
     return e;
@@ -71,8 +72,8 @@ export default function SubmitForm({ categories }) {
       <div className="done">
         <span className="done-ic"><Icon name="check" size={34} /></span>
         <h2>Manuscript received</h2>
-        <p>Reference <strong>{done.ref}</strong>. “{done.title}” has been sent to the editorial team.</p>
-        <p className="muted">Receipt does not imply review, acceptance or publication. An editor will look at your paper link and contact you at the email you provided.</p>
+        <p>Reference <strong>{done.ref}</strong>. &ldquo;{done.title}&rdquo; has been sent to the editorial team.</p>
+        <p className="muted">Receipt does not imply review, acceptance or publication. An editor will look at your uploaded PDF and contact you at the email you provided.</p>
         <div className="row"><Link className="btn btn-primary" href="/">Back to home</Link><button className="btn btn-ghost" onClick={() => { setDone(null); setF(empty); setCo([]); }}>Submit another</button></div>
       </div>
     );
@@ -80,7 +81,7 @@ export default function SubmitForm({ categories }) {
 
   return (
     <>
-      <div className="demo-banner"><Icon name="info" size={16} /> <span><strong>How submission works.</strong> Your details and paper link are saved for editorial review. Submitting does not mean acceptance or publication, and nothing appears on the site until an editor approves it.</span></div>
+      <div className="demo-banner"><Icon name="info" size={16} /> <span><strong>How submission works.</strong> Your details and manuscript PDF are saved for editorial review. Submitting does not mean acceptance or publication, and nothing appears on the site until an editor approves it.</span></div>
       <form onSubmit={onSubmit} noValidate className="form-grid">
         <div className="honey" aria-hidden="true"><label>Website<input tabIndex={-1} autoComplete="off" value={f.website} onChange={(e) => set('website', e.target.value)} /></label></div>
         <Field id="f-title" label="Paper title *" error={errs.title}><input className="input" id="f-title" maxLength={200} value={f.title} onChange={(e) => set('title', e.target.value)} aria-invalid={!!errs.title} /></Field>
@@ -106,19 +107,42 @@ export default function SubmitForm({ categories }) {
           <Field id="f-institution" label="Institution *" error={errs.institution}><input className="input" id="f-institution" autoComplete="organization" value={f.institution} onChange={(e) => set('institution', e.target.value)} aria-invalid={!!errs.institution} /></Field>
           <Field id="f-category" label="Research category *" error={errs.category}>
             <select className="select" id="f-category" value={f.category} onChange={(e) => set('category', e.target.value)} aria-invalid={!!errs.category}>
-              <option value="">Select a category</option>{categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+              <option value="">Select a category</option>
+              {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+              <option value="__new__">+ Add new category...</option>
             </select>
           </Field>
         </div>
+        {f.category === '__new__' && (
+          <Field id="f-new-category" label="New Category Name *" error={errs.newCategory} hint="Your suggested category will be added to the journal.">
+            <input
+              className="input"
+              id="f-new-category"
+              placeholder="e.g. Artificial Intelligence, Renewable Energy"
+              value={f.newCategory}
+              onChange={(e) => set('newCategory', e.target.value)}
+              autoFocus
+              aria-invalid={!!errs.newCategory}
+            />
+          </Field>
+        )}
         <Field id="f-keywords" label="Keywords *" hint="Separate with commas — 3 to 8 keywords." error={errs.keywords}><input className="input" id="f-keywords" placeholder="e.g. language models, evaluation, efficiency" value={f.keywords} onChange={(e) => set('keywords', e.target.value)} aria-invalid={!!errs.keywords} /></Field>
-        <Field id="f-paperUrl" label="Paper link *" hint="Paste a link to your manuscript (Google Drive, arXiv, OneDrive, your site…). Make sure anyone with the link can view it." error={errs.paperUrl}>
-          <input className="input" id="f-paperUrl" type="url" inputMode="url" placeholder="https://" value={f.paperUrl} onChange={(e) => set('paperUrl', e.target.value)} aria-invalid={!!errs.paperUrl} />
-        </Field>
-        <CoverUpload id="f-cover" label="Cover image (optional)" value={f.coverUrl} onChange={(u) => set('coverUrl', u)} />
+
+        {/* PDF Upload — replaces the old "Paper link" text field */}
+        <div className="field" id="f-pdfUrl">
+          <PdfUpload
+            id="f-pdfUrl-input"
+            label="Manuscript PDF *"
+            value={f.pdfUrl}
+            onChange={(u) => { set('pdfUrl', u); if (u) setErrs((ex) => ({ ...ex, pdfUrl: undefined })); }}
+          />
+          {errs.pdfUrl ? <p className="err" role="alert">{errs.pdfUrl}</p> : null}
+        </div>
+
         <div className="field check"><label><input type="checkbox" id="orig" checked={f.declaration} onChange={(e) => set('declaration', e.target.checked)} /> I declare this work is original, has not been published elsewhere, and all sources are credited. *</label><p className="err" role="alert">{errs.declaration || ''}</p></div>
         <div className="field check"><label><input type="checkbox" id="consent" checked={f.consent} onChange={(e) => set('consent', e.target.checked)} /> I consent to the <Link href="/editorial-policy" target="_blank">publication and review policies</Link>. *</label><p className="err" role="alert">{errs.consent || ''}</p></div>
         {serverErr ? <p className="msg-err" role="alert">{serverErr}</p> : null}
-        <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? 'Submitting…' : 'Submit Manuscript'}</button>
+        <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? 'Submitting\u2026' : 'Submit Manuscript'}</button>
       </form>
     </>
   );

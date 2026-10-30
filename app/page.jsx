@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getAll } from '@/lib/data';
 import { makeHelpers } from '@/lib/helpers';
 import { Icon } from '@/components/Icon';
-import { Cover, PaperCard, LatestPaperCard, DemoNote, SetupNotice } from '@/components/ui';
+import { LatestPaperCard, DemoNote, SetupNotice } from '@/components/ui';
 
 export default async function Home() {
   const D = await getAll();
@@ -11,14 +11,11 @@ export default async function Home() {
   const { papers: P, categories: CATS } = D;
   const feat = P.find((p) => p.featured) || [...P].sort(h.byDate)[0];
   const latest = [...P].sort(h.byDate).slice(0, 6);
-  const popular = [...P].sort((a, b) => b.views - a.views).slice(0, 6);
-  const students = [...P].filter((p) => p.authors[0] && h.author(p.authors[0]).type === 'student').sort(h.byDate).slice(0, 3);
-  const faculty = [...P].filter((p) => h.hasType(p, 'faculty')).sort(h.byDate).slice(0, 5);
   const hasDemo = P.some((p) => p.demo);
 
   if (!feat) {
     return (
-      <div className="container section"><div className="empty"><h3>No research published yet</h3><p>Add papers from the <Link href="/admin">admin panel</Link> or run <code>supabase/seed.sql</code>.</p></div></div>
+      <div className="container section"><div className="empty"><h3>No research published yet</h3><p>Add articles from the <Link href="/admin">admin panel</Link> or run <code>supabase/seed.sql</code>.</p></div></div>
     );
   }
 
@@ -33,14 +30,14 @@ export default async function Home() {
             <p className="lede reveal">Discover and share research across disciplines — from machine learning to marine ecology — written by students, teachers and independent researchers.</p>
             <form className="search-box reveal" action="/search" role="search">
               <label className="sr" htmlFor="hero-q">Search</label><Icon name="search" />
-              <input id="hero-q" name="q" type="search" placeholder="Search research papers, authors, topics..." autoComplete="off" />
+              <input id="hero-q" name="q" type="search" placeholder="Search research articles, authors, topics..." autoComplete="off" />
               <button className="btn btn-primary" type="submit">Search</button>
             </form>
             <div className="quick reveal"><span>Try:</span>
               <Link href="/search?q=language+models">language models</Link><Link href="/search?q=solar">solar</Link><Link href="/search?q=health">health</Link><Link href="/search?q=accessibility">accessibility</Link>
             </div>
             <div className="hero-cta reveal">
-              <Link className="btn btn-primary" href="/published-papers">Explore Published Papers <Icon name="arrow" size={18} /></Link>
+              <Link className="btn btn-primary" href="/published-papers">Explore Articles <Icon name="arrow" size={18} /></Link>
               <Link className="btn btn-ghost" href="/submit">Submit Research</Link>
             </div>
           </div>
@@ -60,59 +57,21 @@ export default async function Home() {
       </section>
 
       <section className="section section-latest"><div className="container">
-        <div className="latest-head reveal"><h2>Latest Research</h2><Link className="more" href="/published-papers">View all papers <Icon name="arrow" size={16} /></Link></div>
+        <div className="latest-head reveal"><h2>Latest Research</h2><Link className="more" href="/published-papers">View all articles <Icon name="arrow" size={16} /></Link></div>
         <div className="latest-grid">{latest.map((p) => <LatestPaperCard key={p.id} p={p} h={h} />)}</div>
-        {hasDemo ? <DemoNote /> : null}
       </div></section>
 
       <section className="section tint"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Readership</p><h2>Most Read Research</h2><p className="sub">View counts are sample demonstration metrics.</p></div><Link className="more" href="/published-papers?sort=read">View All <Icon name="arrow" size={16} /></Link></div>
-        <ol className="pop-list">
-          {popular.map((p, i) => (
-            <li className="pop-item reveal" key={p.id}>
-              <span className="pop-rank">{String(i + 1).padStart(2, '0')}</span>
-              <Link className="pop-cover" href={`/journals/${p.slug}`} tabIndex={-1} aria-hidden="true"><Cover p={p} h={h} cls="mini" /></Link>
-              <div className="pop-text"><span className="chip">{h.cat(p.cat).short}</span><h3><Link href={`/journals/${p.slug}`}>{p.title}</Link></h3><p>{h.authorNames(p)}</p></div>
-              <div className="pop-views"><Icon name="eye" size={16} /><strong>{h.num(p.views)}</strong><small>views</small></div>
-            </li>
-          ))}
-        </ol>
-      </div></section>
-
-      <section className="section tint"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">The next generation</p><h2>Student Research</h2><p className="sub">Work from undergraduate and postgraduate researchers.</p></div><Link className="more" href="/student-research">View All Student Research <Icon name="arrow" size={16} /></Link></div>
-        <div className="grid g3">{students.map((p) => <PaperCard key={p.id} p={p} h={h} byline={`${h.author(p.authors[0]).name} · ${h.author(p.authors[0]).designation}`} />)}</div>
-      </div></section>
-
-      <section className="section"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">From the academy</p><h2>Faculty &amp; Teacher Research</h2></div><Link className="more" href="/faculty-research">View All Faculty Research <Icon name="arrow" size={16} /></Link></div>
-        <div className="frows">
-          {faculty.map((p) => {
-            const a = h.author(p.authors.find((s) => h.author(s).type === 'faculty'));
-            return (
-              <Link className="frow reveal" href={`/journals/${p.slug}`} key={p.id}>
-                <time dateTime={p.date}>{h.fmt(p.date)}</time>
-                <div><h3>{p.title}</h3><p><strong>{a.name}</strong>, {a.designation} · {a.inst}</p></div>
-                <span className="chip">{h.cat(p.cat).short}</span><Icon name="arrow" size={20} />
-              </Link>
-            );
-          })}
-        </div>
-      </div></section>
-
-      <section className="section tint"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Browse by discipline</p><h2>Explore Research Categories</h2></div><Link className="more" href="/published-papers">All papers <Icon name="arrow" size={16} /></Link></div>
+        <div className="section-head reveal"><div><p className="eyebrow">Browse by discipline</p><h2>Explore Research Categories</h2></div><Link className="more" href="/published-papers">All articles <Icon name="arrow" size={16} /></Link></div>
         <div className="cat-grid">
           {CATS.map((c) => (
             <Link className="cat-tile reveal" href={`/published-papers?cat=${c.slug}`} key={c.slug}>
               <span className="cat-ic"><Icon name={c.icon} size={26} /></span><h3>{c.name}</h3>
-              <span className="cat-count">{P.filter((p) => h.inCat(p, c.slug)).length} papers</span><span className="cat-arrow"><Icon name="arrow" size={18} /></span>
+              <span className="cat-count">{P.filter((p) => h.inCat(p, c.slug)).length} articles</span><span className="cat-arrow"><Icon name="arrow" size={18} /></span>
             </Link>
           ))}
         </div>
       </div></section>
-
-
     </>
   );
 }

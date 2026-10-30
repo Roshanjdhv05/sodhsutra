@@ -1,12 +1,16 @@
 import { PageHead } from '@/components/ui';
 import SubmissionTemplateCard from '@/components/SubmissionTemplateCard';
+import SubmitForm from '@/components/SubmitForm';
+import { getAll } from '@/lib/data';
 
 export const metadata = {
   title: 'Submit Your Research Paper',
   description: 'Submit your original research paper, scholarly article, or review paper for editorial consideration in ShodhSutra.',
 };
 
-export default function SubmitPage() {
+export default async function SubmitPage() {
+  const data = await getAll();
+  const categories = data?.categories || [];
   return (
     <>
       <PageHead
@@ -147,6 +151,12 @@ export default function SubmitPage() {
             </div>
 
             <SubmissionTemplateCard />
+          </section>
+
+          {/* Submission Form with Automatic PDF Compression */}
+          <section className="submit-section submit-form-section" id="submission-form" style={{ marginTop: '32px' }}>
+            <h2 className="submit-h2">Research Paper Submission Form</h2>
+            <SubmitForm categories={categories} />
           </section>
 
         </div>

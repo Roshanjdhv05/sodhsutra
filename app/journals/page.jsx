@@ -3,8 +3,8 @@ import { SetupNotice } from '@/components/ui';
 import JournalLibrary from '@/components/JournalLibrary';
 
 export const metadata = {
-  title: 'Journals & Volumes',
-  description: 'Explore peer-reviewed journal volumes and quarterly issues by academic year. Open any journal book to inspect and read published research papers.',
+  title: 'Issues & Volumes',
+  description: 'Explore peer-reviewed issues and quarterly volumes by academic year. Open any issue to inspect and read published research articles.',
 };
 
 export default async function JournalsPage() {

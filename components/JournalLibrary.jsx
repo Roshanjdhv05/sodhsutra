@@ -114,15 +114,15 @@ export default function JournalLibrary({ data }) {
           <nav className="crumbs" aria-label="Breadcrumb">
             <ol>
               <li><Link href="/">Home</Link></li>
-              <li><span aria-current="page">Journals</span></li>
+              <li><span aria-current="page">Issues</span></li>
             </ol>
           </nav>
           <div style={{ maxWidth: '780px' }}>
             <p className="eyebrow">Academic Archive</p>
-            <h1>Journal Volumes &amp; Issues</h1>
+            <h1>Issues &amp; Volumes</h1>
             <p className="lede">
-              Explore ShodhSutra’s official peer-reviewed issues presented as interactive journal books.
-              Select any volume below to open the book and read all published research papers.
+              Explore ShodhSutra’s official peer-reviewed issues presented as interactive books.
+              Select any issue below to open the book and read all published research articles.
             </p>
             <div className="journal-stats-row">
               <span className="journal-stat-chip">

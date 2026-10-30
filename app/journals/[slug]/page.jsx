@@ -4,7 +4,7 @@ import { getAll } from '@/lib/data';
 import { makeHelpers } from '@/lib/helpers';
 import { sectionsFor, citeBase } from '@/lib/sections';
 import { Icon } from '@/components/Icon';
-import { Cover, PaperCard, Avatar, SetupNotice } from '@/components/ui';
+import { PaperCard, Avatar, SetupNotice } from '@/components/ui';
 import { ProgressBar, Toc, CiteBox, ShareRow } from '@/components/PaperTools';
 
 export async function generateMetadata({ params }) {
@@ -26,11 +26,33 @@ export default async function PaperPage({ params }) {
   const rel = h.related(p);
   const firstBody = secs[1]?.id || 'abstract';
 
+  // Format clean DOI URL and display text
+  const doiUrl = p.doi
+    ? (p.doi.startsWith('http') ? p.doi : `https://doi.org/${p.doi}`)
+    : null;
+  const doiDisplay = p.doi
+    ? (p.doi.startsWith('http') ? p.doi.replace(/^https?:\/\/(doi\.org\/)?/, '') : p.doi)
+    : 'Not assigned';
+
+  // Extract first sentence of abstract for subtitle/lede
+  const firstSentence = p.abstract
+    ? (p.abstract.split(/(?<=[.?!])\s+/)[0] || p.abstract).trim()
+    : null;
+
   return (
     <>
       <ProgressBar />
       <section className="article-head">
-        <div className="container">
+        {/* Organic curved background design theme */}
+        <div className="article-head-bg" aria-hidden="true">
+          <svg className="article-head-wave" viewBox="0 0 1440 380" fill="none" preserveAspectRatio="none">
+            <path d="M0,240 C320,330 520,150 880,210 C1140,250 1290,160 1440,180 L1440,380 L0,380 Z" fill="var(--o1)" opacity="0.7" />
+            <path d="M0,290 C360,360 680,230 1020,270 C1220,300 1340,230 1440,250 L1440,380 L0,380 Z" fill="var(--o2)" opacity="0.45" />
+            <circle cx="1260" cy="110" r="180" fill="var(--o1)" opacity="0.4" />
+          </svg>
+        </div>
+
+        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
           <nav className="crumbs" aria-label="Breadcrumb">
             <ol>
               <li><Link href="/">Home</Link></li><li><Link href="/published-papers">Published Papers</Link></li>
@@ -38,37 +60,94 @@ export default async function PaperPage({ params }) {
               <li><span aria-current="page">{p.title.length > 48 ? p.title.slice(0, 48) + '…' : p.title}</span></li>
             </ol>
           </nav>
+
           <div className="article-grid">
-            <div>
-              <p className="eyebrow"><Link href={`/published-papers?cat=${c.slug}`}>{c.name}</Link> · {p.type}</p>
-              <h1>{p.title}</h1>
-              <ul className="authors-line">
-                {p.authors.map((s) => {
-                  const a = h.author(s);
-                  return (
-                    <li key={s}><Avatar a={a} size="sm" /><span><Link href={`/authors/${a.slug}`}>{a.name}</Link><small>{a.designation}{a.designation && a.inst ? ' · ' : ''}{a.inst}</small></span></li>
-                  );
-                })}
-              </ul>
-              <dl className="meta-grid">
-                <div><dt>Published</dt><dd><time dateTime={p.date}>{h.fmt(p.date)}</time></dd></div>
-                <div><dt>DOI</dt><dd>{p.doi ? <a href={`https://doi.org/${p.doi}`} target="_blank" rel="noopener noreferrer">{p.doi}</a> : 'Not assigned'}</dd></div>
-                <div><dt>Peer review</dt><dd>{p.peerReviewed ? 'Verified' : 'Not verified'}</dd></div>
-                <div><dt>Readership</dt><dd>{h.num(p.views)}{p.demo ? <> <small>(sample)</small></> : null}</dd></div>
-              </dl>
-              {p.demo ? (
-                <p className="demo-banner"><Icon name="info" size={16} /> <span><strong>Demonstration record.</strong> Authors, institutions and text are fictional. No DOI, PDF, peer-review status or references have been invented.</span></p>
-              ) : null}
-              <div className="hero-cta">
-                {p.paperUrl ? (
-                  <a className="btn btn-primary" href={p.paperUrl} target="_blank" rel="noopener noreferrer"><Icon name="link" size={18} /> Open Paper Link</a>
-                ) : (
-                  <button className="btn btn-primary" disabled aria-disabled="true" title="No paper link has been added to this record"><Icon name="link" size={18} /> Link unavailable</button>
-                )}
-                <a className="btn btn-ghost" href={`#${firstBody}`}><Icon name="book" size={18} /> Read Full Text</a>
+            {/* Left: title & lede block */}
+            <div className="article-title-col">
+              <div className="article-eyebrow-wrap">
+                <p className="article-eyebrow">
+                  <Link href={`/published-papers?cat=${c.slug}`}>{c.name}</Link>
+                  <span className="eyebrow-sep">·</span>
+                  <span>{p.type}</span>
+                </p>
+                <span className="eyebrow-bar" aria-hidden="true" />
               </div>
+
+              <h1>{p.title}</h1>
+
+              {firstSentence ? (
+                <p className="article-lede">{firstSentence}</p>
+              ) : null}
             </div>
-            <div className="article-cover"><Cover p={p} h={h} cls="xl" /></div>
+
+            {/* Right: author details box */}
+            <aside className="article-author-card" aria-label="Author and publication details">
+              <div className="author-card-header">
+                <ul className="author-card-list">
+                  {p.authors.map((s) => {
+                    const a = h.author(s);
+                    return (
+                      <li key={s} className="author-card-item">
+                        <Avatar a={a} size="sm" />
+                        <div className="author-card-info">
+                          <Link href={`/authors/${a.slug}`} className="author-card-name">{a.name}</Link>
+                          {(a.inst || a.designation) && (
+                            <span className="author-card-inst">{a.inst || a.designation}</span>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="author-card-divider" />
+
+              <div className="author-card-meta">
+                <div className="author-card-meta-row">
+                  <div className="author-card-meta-icon"><Icon name="calendar" size={16} /></div>
+                  <div className="author-card-meta-text">
+                    <span className="author-card-meta-label">PUBLISHED</span>
+                    <span className="author-card-meta-val"><time dateTime={p.date}>{h.fmt(p.date)}</time></span>
+                  </div>
+                </div>
+
+                <div className="author-card-meta-row">
+                  <div className="author-card-meta-icon"><Icon name="link" size={16} /></div>
+                  <div className="author-card-meta-text">
+                    <span className="author-card-meta-label">DOI</span>
+                    <span className="author-card-meta-val">
+                      {doiUrl ? (
+                        <a href={doiUrl} target="_blank" rel="noopener noreferrer" title={doiUrl}>
+                          {`https://doi.org/${doiDisplay}`}
+                        </a>
+                      ) : (
+                        <span>Not assigned</span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="author-card-actions">
+                {p.paperUrl ? (
+                  <a className="btn btn-card-primary" href={p.paperUrl} target="_blank" rel="noopener noreferrer">
+                    <Icon name="link" size={16} />
+                    <span>Open Paper Link</span>
+                    <span className="btn-arrow" aria-hidden="true">→</span>
+                  </a>
+                ) : (
+                  <button className="btn btn-card-primary disabled" disabled aria-disabled="true" title="No paper link has been added">
+                    <Icon name="link" size={16} />
+                    <span>Link unavailable</span>
+                  </button>
+                )}
+                <a className="btn btn-card-secondary" href={`#${firstBody}`}>
+                  <Icon name="book" size={16} />
+                  <span>Read Full Text</span>
+                </a>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
