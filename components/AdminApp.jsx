@@ -119,61 +119,41 @@ function AuthorForm({ row, onSave, onClose }) {
   );
 }
 
-function extractSections(text = '') {
-  const sections = {
-    introduction: '',
-    scope_and_approach: '',
-    literature_review: '',
-    discussion: '',
-    conclusion: '',
-    other_sections: '',
-  };
-  if (!text) return sections;
-  const headingRegex = /(?:^|\n)#{1,3}\s+([^\n]+)/g;
-  const matches = [...text.matchAll(headingRegex)];
-  if (!matches.length) {
-    sections.introduction = text.trim();
-    return sections;
-  }
-  matches.forEach((m, idx) => {
-    const rawTitle = m[1].trim();
-    const lower = rawTitle.toLowerCase();
-    const start = m.index + m[0].length;
-    const end = idx + 1 < matches.length ? matches[idx + 1].index : text.length;
-    const content = text.slice(start, end).trim();
-    if (lower.includes('introduction')) {
-      sections.introduction = content;
-    } else if (lower.includes('scope')) {
-      sections.scope_and_approach = content;
-    } else if (lower.includes('literature')) {
-      sections.literature_review = content;
-    } else if (lower.includes('discussion')) {
-      sections.discussion = content;
-    } else if (lower.includes('conclusion')) {
-      sections.conclusion = content;
-    } else {
-      sections.other_sections += (sections.other_sections ? '\n\n' : '') + `## ${rawTitle}\n${content}`;
-    }
-  });
-  return sections;
+function getOrdinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'], v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 function PaperForm({ row, data, onSave, onClose }) {
   const n = data.papers.length;
-  const initialSections = extractSections(row?.full_text || '');
+
+  const initAuthors = () => {
+    if (row?.authorIds?.length) {
+      return row.authorIds.map((id) => {
+        const a = data.authors.find((au) => au.id === id);
+        return {
+          name: a?.name || '',
+          institution: a?.institution || row?.institution || '',
+          designation: a?.designation || '',
+        };
+      });
+    }
+    return [{ name: '', institution: '', designation: '' }];
+  };
+
+  const [authors, setAuthors] = useState(initAuthors);
+  const addAuthor = () => setAuthors((prev) => [...prev, { name: '', institution: '', designation: '' }]);
+  const removeAuthor = (idx) => setAuthors((prev) => prev.filter((_, i) => i !== idx));
+  const setAuthor = (idx, field, val) =>
+    setAuthors((prev) => prev.map((a, i) => (i === idx ? { ...a, [field]: val } : a)));
+
   const [f, setF] = useState(() => ({
-    title: '', slug: '', abstract: '', category_slug: data.categories[0]?.slug || '', category2_slug: '', authorIds: [], published_on: today(), keywords: '',
-    views: 0, content_type: row?.content_type || 'Original Research Articles', format: 'rev', institution: '', featured: false, doi: '', peer_reviewed: false, is_demo: false,
+    title: '', slug: '', abstract: '', category_slug: data.categories[0]?.slug || '', category2_slug: '',
+    authorIds: [], published_on: today(), keywords: '', views: 0,
+    content_type: row?.content_type || 'Original Research Articles',
+    format: 'rev', institution: '', featured: false, doi: '', peer_reviewed: false, is_demo: false,
     paper_url: '', cover_url: '', art_style: (n * 5 + 1) % 8, art_theme: (n * 7 + 2) % 6, art_seed: n + 1,
-    authors_text: row ? (row.authorIds || []).map((id) => data.authors.find((a) => a.id === id)?.name).filter(Boolean).join(', ') : '',
     new_category_name: '',
-    introduction: initialSections.introduction,
-    scope_and_approach: initialSections.scope_and_approach,
-    literature_review: initialSections.literature_review,
-    discussion: initialSections.discussion,
-    conclusion: initialSections.conclusion,
-    other_sections: initialSections.other_sections,
-    refs_text: '',
     ...(row ? {
       ...row,
       category2_slug: row.category2_slug || '',
@@ -183,42 +163,74 @@ function PaperForm({ row, data, onSave, onClose }) {
       institution: row.institution || '',
       published_on: String(row.published_on).slice(0, 10),
       keywords: (row.keywords || []).join(', '),
-      refs_text: (row.refs || []).join('\n'),
-      authors_text: (row.authorIds || []).map((id) => data.authors.find((a) => a.id === id)?.name).filter(Boolean).join(', '),
       new_category_name: '',
       content_type: row.content_type || 'Original Research Articles',
-      introduction: initialSections.introduction,
-      scope_and_approach: initialSections.scope_and_approach,
-      literature_review: initialSections.literature_review,
-      discussion: initialSections.discussion,
-      conclusion: initialSections.conclusion,
-      other_sections: initialSections.other_sections,
     } : {}),
   }));
-  const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
+
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
+
+  const handlePdfDetected = ({ title, context }) => {
+    setF((prev) => ({
+      ...prev,
+      title: prev.title?.trim() ? prev.title : (title || ''),
+      abstract: prev.abstract?.trim() ? prev.abstract : (context || ''),
+    }));
+  };
+
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setErr('');
-    const parts = [
-      f.introduction?.trim() ? `## Introduction\n${f.introduction.trim()}` : null,
-      f.scope_and_approach?.trim() ? `## Scope and Approach\n${f.scope_and_approach.trim()}` : null,
-      f.literature_review?.trim() ? `## Literature Review\n${f.literature_review.trim()}` : null,
-      f.discussion?.trim() ? `## Discussion\n${f.discussion.trim()}` : null,
-      f.conclusion?.trim() ? `## Conclusion\n${f.conclusion.trim()}` : null,
-      f.other_sections?.trim() ? f.other_sections.trim() : null,
-    ].filter(Boolean);
-    const full_text = parts.join('\n\n');
-    const r = await onSave({ ...f, full_text, id: row?.id });
+
+    const cleanAuthors = authors.filter((a) => a.name.trim());
+    if (cleanAuthors.length === 0) {
+      setBusy(false);
+      setErr('Please enter at least one author name.');
+      return;
+    }
+
+    const authors_text = cleanAuthors.map((a) => a.name.trim()).join(', ');
+    const institution = cleanAuthors[0]?.institution || f.institution || '';
+    const r = await onSave({
+      ...f,
+      authors_data: cleanAuthors,
+      authors_text,
+      institution,
+      id: row?.id,
+      full_text: '',
+    });
     setBusy(false);
     if (!r.ok) setErr(r.error);
   }
+
   return (
     <form onSubmit={submit} noValidate>
       <div className="formgrid c2">
-        <F id="p-title" label="Title *" full><input id="p-title" className="input" value={f.title} onChange={(e) => set('title', e.target.value)} autoFocus /></F>
-        <F id="p-abs" label="Abstract *" hint="Appears under #abstract in contents." full><textarea id="p-abs" className="input" rows={4} value={f.abstract} onChange={(e) => set('abstract', e.target.value)} /></F>
+        <F id="p-title" label="Title *" full>
+          <input
+            id="p-title"
+            className="input"
+            value={f.title}
+            onChange={(e) => set('title', e.target.value)}
+            placeholder="Paper title (auto-detected when uploading PDF)"
+            autoFocus
+          />
+        </F>
+
+        <F id="p-abs" label="Abstract / Context *" hint="Appears under #abstract in contents (auto-detected from PDF)." full>
+          <textarea
+            id="p-abs"
+            className="input"
+            rows={5}
+            value={f.abstract}
+            onChange={(e) => set('abstract', e.target.value)}
+            placeholder="Context or abstract of the paper (auto-detected when uploading PDF)..."
+          />
+        </F>
+
         <F id="p-type" label="Manuscript Category *">
           <select id="p-type" className="select" value={f.content_type} onChange={(e) => set('content_type', e.target.value)}>
             {MANUSCRIPT_CATEGORIES.map((cat) => (
@@ -226,6 +238,7 @@ function PaperForm({ row, data, onSave, onClose }) {
             ))}
           </select>
         </F>
+
         <F id="p-cat" label="Theme *">
           <select id="p-cat" className="select" value={f.category_slug} onChange={(e) => set('category_slug', e.target.value)}>
             <option value="">Select a theme</option>
@@ -235,37 +248,131 @@ function PaperForm({ row, data, onSave, onClose }) {
         </F>
         {f.category_slug === '__new__' ? (
           <F id="p-cat-new" label="New Theme Name *" hint="Will automatically create and link this theme." full>
-            <input id="p-cat-new" className="input" placeholder="e.g. Artificial Intelligence, Renewable Energy" value={f.new_category_name} onChange={(e) => set('new_category_name', e.target.value)} autoFocus required />
+            <input
+              id="p-cat-new"
+              className="input"
+              placeholder="e.g. Artificial Intelligence, Renewable Energy"
+              value={f.new_category_name}
+              onChange={(e) => set('new_category_name', e.target.value)}
+              autoFocus
+              required
+            />
           </F>
         ) : (
-          <F id="p-cat2" label="Second theme (optional)"><select id="p-cat2" className="select" value={f.category2_slug} onChange={(e) => set('category2_slug', e.target.value)}><option value="">None</option>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></F>
+          <F id="p-cat2" label="Second theme (optional)">
+            <select id="p-cat2" className="select" value={f.category2_slug} onChange={(e) => set('category2_slug', e.target.value)}>
+              <option value="">None</option>
+              {data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+            </select>
+          </F>
         )}
-        <F id="p-auth" label="Authors * (type author names, separated by commas)" hint="e.g. Dr. A. Sharma, Prof. R. Patel. New authors are created automatically." full>
-          <input id="p-auth" className="input" placeholder="e.g. Dr. A. Sharma, Prof. R. Patel" value={f.authors_text} onChange={(e) => set('authors_text', e.target.value)} required />
+
+        {/* Multi-author rows with 1st ] Authors, Institution, Designation */}
+        <div className="full" style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink, #111)' }}>Authors *</span>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={addAuthor}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Icon name="plus" size={14} /> Add more author
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {authors.map((a, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '70px 1.2fr 1fr 1fr auto',
+                  gap: '8px',
+                  alignItems: 'center',
+                  background: 'var(--surface2, #f5f5f7)',
+                  borderRadius: '8px',
+                  padding: '10px 12px',
+                  border: '1px solid var(--border, #e5e5e7)',
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--ink-muted, #555)' }}>
+                  {getOrdinal(i + 1)} ]
+                </div>
+                <div>
+                  <input
+                    className="input"
+                    placeholder="Authors"
+                    value={a.name}
+                    onChange={(e) => setAuthor(i, 'name', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <input
+                    className="input"
+                    placeholder="Institution"
+                    value={a.institution}
+                    onChange={(e) => setAuthor(i, 'institution', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <input
+                    className="input"
+                    placeholder="Designation"
+                    value={a.designation}
+                    onChange={(e) => setAuthor(i, 'designation', e.target.value)}
+                  />
+                </div>
+                <div>
+                  {authors.length > 1 ? (
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={() => removeAuthor(i)}
+                      title="Remove author"
+                      style={{ color: '#e11d48' }}
+                    >
+                      <Icon name="x" size={16} />
+                    </button>
+                  ) : (
+                    <span style={{ width: '28px', display: 'inline-block' }} />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: '8px' }}>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={addAuthor}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}
+            >
+              <Icon name="plus" size={14} /> Add more author
+            </button>
+          </div>
+        </div>
+
+        <F id="p-date" label="Publication date *">
+          <input id="p-date" className="input" type="date" value={f.published_on} onChange={(e) => set('published_on', e.target.value)} />
         </F>
-        <F id="p-date" label="Publication date *"><input id="p-date" className="input" type="date" value={f.published_on} onChange={(e) => set('published_on', e.target.value)} /></F>
-        <F id="p-inst" label="Institution" hint="Blank = first author’s institution."><input id="p-inst" className="input" value={f.institution} onChange={(e) => set('institution', e.target.value)} /></F>
-        <F id="p-kw" label="Keywords" hint="Comma separated." full><input id="p-kw" className="input" value={f.keywords} onChange={(e) => set('keywords', e.target.value)} /></F>
+        <F id="p-kw" label="Keywords" hint="Comma separated." full>
+          <input id="p-kw" className="input" value={f.keywords} onChange={(e) => set('keywords', e.target.value)} />
+        </F>
         <div className="full">
           <PdfUpload
             id="p-pdf"
             label="Upload manuscript (PDF) *"
             value={f.paper_url}
             onChange={(u) => set('paper_url', u)}
+            onDetected={handlePdfDetected}
           />
         </div>
-        <F id="p-style" label="Generated art style" hint="Geometric art style for the paper detail page."><select id="p-style" className="select" value={f.art_style} onChange={(e) => set('art_style', +e.target.value)}>{STYLES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
-        <F id="p-theme" label="Cover colour"><select id="p-theme" className="select" value={f.art_theme} onChange={(e) => set('art_theme', +e.target.value)}>{THEMES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
-        <F id="p-doi" label="DOI (only if verified)"><input id="p-doi" className="input" value={f.doi} onChange={(e) => set('doi', e.target.value)} placeholder="10.xxxx/xxxxx" /></F>
-        <F id="p-intro" label="Introduction (optional)" hint="Appears under #introduction in contents." full><textarea id="p-intro" className="input" rows={4} value={f.introduction} onChange={(e) => set('introduction', e.target.value)} placeholder="Write the introduction here..." /></F>
-        <F id="p-scope" label="Scope and Approach (optional)" hint="Appears under #scope-and-approach in contents." full><textarea id="p-scope" className="input" rows={4} value={f.scope_and_approach} onChange={(e) => set('scope_and_approach', e.target.value)} placeholder="Describe the scope and approach..." /></F>
-        <F id="p-lit" label="Literature Review (optional)" hint="Appears under #literature-review in contents." full><textarea id="p-lit" className="input" rows={4} value={f.literature_review} onChange={(e) => set('literature_review', e.target.value)} placeholder="Review existing work..." /></F>
-        <F id="p-disc" label="Discussion (optional)" hint="Appears under #discussion in contents." full><textarea id="p-disc" className="input" rows={4} value={f.discussion} onChange={(e) => set('discussion', e.target.value)} placeholder="Discuss findings and implications..." /></F>
-        <F id="p-conc" label="Conclusion (optional)" hint="Appears under #conclusion in contents." full><textarea id="p-conc" className="input" rows={4} value={f.conclusion} onChange={(e) => set('conclusion', e.target.value)} placeholder="State the conclusions..." /></F>
-        {f.other_sections ? (
-          <F id="p-other" label="Additional Sections (optional)" full><textarea id="p-other" className="input" rows={4} value={f.other_sections} onChange={(e) => set('other_sections', e.target.value)} /></F>
-        ) : null}
-        <F id="p-refs" label="References (optional)" hint="One reference per line. Appears under #references in contents." full><textarea id="p-refs" className="input" rows={3} value={f.refs_text} onChange={(e) => set('refs_text', e.target.value)} placeholder="Author, A. (Year). Title. Journal..." /></F>
+        <F id="p-doi" label="DOI (only if verified)">
+          <input id="p-doi" className="input" value={f.doi} onChange={(e) => set('doi', e.target.value)} placeholder="10.xxxx/xxxxx" />
+        </F>
       </div>
       <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save paper' : 'Publish paper'} />
     </form>
@@ -465,6 +572,7 @@ export default function AdminApp({ data }) {
     ['papers', 'Articles', data.papers.length],
     ['volumes', 'Issues', (data.volumes || []).length],
     ['categories', 'Themes', data.categories.length],
+    ['manuscripts', 'Manuscript Categories', MANUSCRIPT_CATEGORIES.length],
     ['submissions', 'Submissions', pending || data.submissions.length],
   ];
 
@@ -477,7 +585,7 @@ export default function AdminApp({ data }) {
         <div className="row" style={{ margin: 0 }}><a className="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener noreferrer">View site</a><button className="btn btn-ghost btn-sm" onClick={logout}><Icon name="logout" size={16} /> Log out</button></div>
       </div>
       <div className="admin-stats">
-        {[['Articles', data.papers.length], ['Issues', (data.volumes || []).length], ['Themes', data.categories.length], ['New submissions', pending]].map(([l, v]) => <div className="admin-stat" key={l}><strong>{v}</strong><span>{l}</span></div>)}
+        {[['Articles', data.papers.length], ['Issues', (data.volumes || []).length], ['Themes', data.categories.length], ['Manuscripts', MANUSCRIPT_CATEGORIES.length], ['New submissions', pending]].map(([l, v]) => <div className="admin-stat" key={l}><strong>{v}</strong><span>{l}</span></div>)}
       </div>
       {flash?.ok ? <p className="msg-ok" role="status">{flash.ok}</p> : null}
       {flash?.err ? <p className="msg-err" role="alert">{flash.err}</p> : null}
@@ -593,6 +701,45 @@ export default function AdminApp({ data }) {
               </tr>
             ))}
           </tbody></table></div>
+        </section>
+      )}
+
+      {tab === 'manuscripts' && (
+        <section>
+          <div className="panel-head">
+            <h2>Manuscript Categories</h2>
+            <div className="row" style={{ margin: 0 }}>
+              <span className="muted">{MANUSCRIPT_CATEGORIES.length} official categories</span>
+            </div>
+          </div>
+          <p className="muted" style={{ marginBottom: '1rem' }}>
+            Official manuscript categories available across ShodhSutra articles and submissions.
+          </p>
+          <div className="table-wrap">
+            <table className="atable">
+              <thead>
+                <tr>
+                  <th style={{ width: '60px' }}>#</th>
+                  <th>Category Name</th>
+                  <th>Published Articles</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MANUSCRIPT_CATEGORIES.map((cat, i) => {
+                  const count = data.papers.filter((p) => (p.content_type || 'Original Research Articles') === cat).length;
+                  return (
+                    <tr key={cat}>
+                      <td><strong>{i + 1}</strong></td>
+                      <td>
+                        <span style={{ fontWeight: 600 }}>{cat}</span>
+                      </td>
+                      <td><span className="pill ok">{count} {count === 1 ? 'article' : 'articles'}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 

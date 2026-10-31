@@ -138,9 +138,33 @@ export async function savePaper(p) {
 
   if (!category_slug || category_slug === '__new__') return fail('Choose or create a category.');
 
-  // Handle authors: if typed as comma-separated text, resolve or create author records
+  // Handle authors: if passed as structured array or comma-separated text
   let authorIds = [];
-  if (p.authors_text && p.authors_text.trim()) {
+  if (Array.isArray(p.authors_data) && p.authors_data.length) {
+    for (const a of p.authors_data) {
+      const name = s(a.name, 120);
+      if (!name) continue;
+      const inst = s(a.institution, 200) || s(p.institution, 200) || 'Independent';
+      const desig = s(a.designation, 120) || '';
+      const { data: found } = await sb.from('authors').select('id, institution, designation').ilike('name', name).limit(1).maybeSingle();
+      if (found) {
+        if (!authorIds.includes(found.id)) authorIds.push(found.id);
+        if ((inst && (!found.institution || found.institution === 'Independent')) || (desig && !found.designation)) {
+          await sb.from('authors').update({
+            ...(inst ? { institution: inst } : {}),
+            ...(desig ? { designation: desig } : {}),
+          }).eq('id', found.id);
+        }
+      } else {
+        const slug = await uniqueSlug(sb, 'authors', name);
+        const { data: created, error: authErr } = await sb.from('authors').insert({
+          slug, name, type: 'researcher', designation: desig, institution: inst, department: '', interests: [], bio: '',
+        }).select('id').single();
+        if (authErr) return fail(nice(authErr));
+        authorIds.push(created.id);
+      }
+    }
+  } else if (p.authors_text && p.authors_text.trim()) {
     const names = p.authors_text.split(/[,;\n]+/).map((x) => s(x, 120)).filter(Boolean);
     for (const name of names) {
       const { data: found } = await sb.from('authors').select('id').ilike('name', name).limit(1).maybeSingle();
@@ -161,7 +185,7 @@ export async function savePaper(p) {
 
   if (!authorIds.length) return fail('Please enter at least one author name.');
 
-  let institution = s(p.institution, 200);
+  let institution = s(p.authors_data?.[0]?.institution, 200) || s(p.institution, 200);
   if (!institution) { const { data } = await sb.from('authors').select('institution').eq('id', authorIds[0]).maybeSingle(); institution = data?.institution || 'Independent'; }
 
   const row = {

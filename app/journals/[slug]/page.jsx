@@ -161,6 +161,19 @@ export default async function PaperPage({ params }) {
                 <h2>{s.title}</h2>
                 {s.paras.map((t, i) => <p key={i}>{t}</p>)}
                 {s.link ? <p><a href={s.link} target="_blank" rel="noopener noreferrer" className="read-link">Open the paper <Icon name="arrow" size={16} /></a></p> : null}
+                {s.id === 'manuscript-pdf' && p.paperUrl ? (
+                  <div style={{ marginTop: '1rem', marginBottom: '2rem' }}>
+                    <div style={{ width: '100%', height: '750px', border: '1px solid var(--border, #e2e8f0)', borderRadius: '12px', overflow: 'hidden', background: '#525659' }}>
+                      <iframe
+                        src={`${p.paperUrl}#toolbar=1`}
+                        title={p.title}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 'none' }}
+                      />
+                    </div>
+                  </div>
+                ) : null}
                 {s.refs && s.refs.length ? <ol>{s.refs.map((r, i) => <li key={i}>{r}</li>)}</ol> : null}
                 {s.id === 'abstract' ? (
                   <ul className="tags kw" aria-label="Keywords">{p.keywords.map((k) => <li key={k}><Link href={`/search?q=${encodeURIComponent(k)}`}>{k}</Link></li>)}</ul>

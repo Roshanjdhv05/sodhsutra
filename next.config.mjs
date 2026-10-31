@@ -1,4 +1,9 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'module';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const require = createRequire(import.meta.url);
 try {
@@ -12,8 +17,9 @@ try {
 const nextConfig = {
   reactStrictMode: true,
   eslint: { ignoreDuringBuilds: true },
+  outputFileTracingRoot: __dirname,
+  serverExternalPackages: ['pdf-parse'],
   webpack(config, { dev }) {
-    // Prevent devtool eval-source-map mismatch issues in Next.js 15
     if (dev) {
       config.devtool = 'cheap-module-source-map';
     }
@@ -35,4 +41,3 @@ const nextConfig = {
   },
 };
 export default nextConfig;
-

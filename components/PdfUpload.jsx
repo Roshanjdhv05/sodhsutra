@@ -12,12 +12,14 @@ const MAX_PDF_MB = 20;
  * Props:
  *   value      – current public URL string (or '')
  *   onChange   – called with the new public URL after a successful upload
+ *   onDetected – optional callback ({ title, context }) when title/abstract detected
  *   id         – base id for form-field association
  *   label      – visible label text
  */
 export default function PdfUpload({
   value,
   onChange,
+  onDetected,
   id = 'pdf-file',
   label = 'Upload manuscript (PDF) *',
 }) {
@@ -28,12 +30,14 @@ export default function PdfUpload({
   const [err, setErr] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [detectedText, setDetectedText] = useState(null);
 
   /* ---- helpers ---- */
   const reset = () => {
     setStatus('idle');
     setInfo(null);
     setErr('');
+    setDetectedText(null);
     if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(''); }
     setShowPreview(false);
     onChange('');
@@ -45,7 +49,7 @@ export default function PdfUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setErr(''); setInfo(null); setShowPreview(false);
+    setErr(''); setInfo(null); setShowPreview(false); setDetectedText(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl('');
     onChange('');
@@ -89,6 +93,12 @@ export default function PdfUpload({
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || 'Upload failed.');
       onChange(json.url);
+      if (json.detected) {
+        setDetectedText(json.detected);
+        if (onDetected) {
+          onDetected(json.detected);
+        }
+      }
       setStatus('done');
     } catch (ex) {
       setErr(ex.message || 'Upload failed. Please try again.');
@@ -132,7 +142,28 @@ export default function PdfUpload({
           <div className="pdf-upload-status">
             <div className="upload-bar"><i /></div>
             <span className="muted">
-              {status === 'compressing' ? 'Compressing PDF…' : 'Uploading…'}
+              {status === 'compressing' ? 'Compressing PDF…' : 'Uploading & detecting content…'}
+            </span>
+          </div>
+        )}
+
+        {/* Detected title and context notice */}
+        {detectedText && (detectedText.title || detectedText.context) && (
+          <div style={{
+            background: 'rgba(34, 197, 94, 0.1)',
+            border: '1px solid rgba(34, 197, 94, 0.3)',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            marginTop: '8px',
+            fontSize: '13px',
+            color: '#166534',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <Icon name="check" size={16} />
+            <span>
+              <strong>PDF Content Detected:</strong> Title and context were extracted and filled into the form.
             </span>
           </div>
         )}
@@ -184,4 +215,3 @@ export default function PdfUpload({
     </div>
   );
 }
-
