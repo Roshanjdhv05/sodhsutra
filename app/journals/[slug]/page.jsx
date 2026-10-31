@@ -24,7 +24,7 @@ export default async function PaperPage({ params }) {
   const c = h.cat(p.cat);
   const secs = sectionsFor(p, h);
   const rel = h.related(p);
-  const firstBody = secs[1]?.id || 'abstract';
+  const firstBody = secs[0]?.id || (p.paperUrl ? 'manuscript-pdf' : 'about-authors');
 
   // Format clean DOI URL and display text
   const doiUrl = p.doi
@@ -73,10 +73,23 @@ export default async function PaperPage({ params }) {
                 <span className="eyebrow-bar" aria-hidden="true" />
               </div>
 
-              <h1>{p.title}</h1>
+              <h1 className="article-title">{p.title}</h1>
 
-              {firstSentence ? (
-                <p className="article-lede">{firstSentence}</p>
+              {p.abstract ? (
+                <div className="article-hero-abstract">
+                  <div className="article-abstract-label">Abstract</div>
+                  <p className="article-abstract-body">{p.abstract}</p>
+                  {p.keywords && p.keywords.length > 0 && (
+                    <div className="article-hero-keywords">
+                      <span className="keywords-label">Keywords:</span>
+                      <ul className="tags kw inline-tags" aria-label="Keywords">
+                        {p.keywords.map((k) => (
+                          <li key={k}><Link href={`/search?q=${encodeURIComponent(k)}`}>{k}</Link></li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               ) : null}
             </div>
 
@@ -175,9 +188,6 @@ export default async function PaperPage({ params }) {
                   </div>
                 ) : null}
                 {s.refs && s.refs.length ? <ol>{s.refs.map((r, i) => <li key={i}>{r}</li>)}</ol> : null}
-                {s.id === 'abstract' ? (
-                  <ul className="tags kw" aria-label="Keywords">{p.keywords.map((k) => <li key={k}><Link href={`/search?q=${encodeURIComponent(k)}`}>{k}</Link></li>)}</ul>
-                ) : null}
               </section>
             ))
           ) : (
