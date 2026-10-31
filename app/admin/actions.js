@@ -1,6 +1,7 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin, isAdminConfigured } from '@/lib/supabase';
+import { extractPaperFromPdfBuffer } from '@/lib/pdf-extract';
 import { isAdmin, checkPassword, startAdminSession, endAdminSession, adminPasswordSet } from '@/lib/admin-auth';
 import { slugify } from '@/lib/helpers';
 
@@ -300,13 +301,30 @@ export async function publishSubmission(id) {
     if (e2) return fail(nice(e2));
     ids.push(created.id);
   }
+  // Extract PDF content if available
+  let extractedFullText = '';
+  let extractedRefs = [];
+  if (sub.paper_url) {
+    try {
+      const resp = await fetch(sub.paper_url);
+      if (resp.ok) {
+        const buf = Buffer.from(await resp.arrayBuffer());
+        const extracted = await extractPaperFromPdfBuffer(buf, 'manuscript.pdf');
+        if (extracted && !extracted.ocrRequired) {
+          extractedFullText = extracted.full_text || '';
+          extractedRefs = extracted.refs || [];
+        }
+      }
+    } catch { /* best effort – proceed without extraction */ }
+  }
+
   const { count } = await sb.from('papers').select('id', { count: 'exact', head: true });
   const slug = await uniqueSlug(sb, 'papers', sub.title);
   const { data: paper, error: e3 } = await sb.from('papers').insert({
     code: 'SS-' + Date.now().toString(36).toUpperCase(), slug, title: sub.title, abstract: sub.abstract, category_slug: sub.category_slug,
     institution: sub.institution, published_on: new Date().toISOString().slice(0, 10), keywords: sub.keywords || [], views: 0,
     content_type: sub.content_type || 'Original Research Articles', format: 'emp', featured: false, paper_url: sub.paper_url, peer_reviewed: false, is_demo: false,
-    cover_url: sub.cover_url, art_style: ((count || 0) * 5 + 1) % 8, art_theme: ((count || 0) * 7 + 2) % 6, art_seed: (count || 0) + 1, refs: [], full_text: '',
+    cover_url: sub.cover_url, art_style: ((count || 0) * 5 + 1) % 8, art_theme: ((count || 0) * 7 + 2) % 6, art_seed: (count || 0) + 1, refs: extractedRefs, full_text: extractedFullText,
   }).select('id').single();
   if (e3) return fail(nice(e3));
   const link = await sb.from('paper_authors').insert(ids.map((author_id, i) => ({ paper_id: paper.id, author_id, position: i + 1 })));

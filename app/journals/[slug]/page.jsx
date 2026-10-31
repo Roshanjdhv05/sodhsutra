@@ -6,6 +6,7 @@ import { sectionsFor, citeBase } from '@/lib/sections';
 import { Icon } from '@/components/Icon';
 import { PaperCard, Avatar, SetupNotice } from '@/components/ui';
 import { ProgressBar, Toc, CiteBox, ShareRow } from '@/components/PaperTools';
+import { sanitizeArticleHtml } from '@/lib/pdf-extract';
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -146,18 +147,18 @@ export default async function PaperPage({ params }) {
                 {p.paperUrl ? (
                   <a className="btn btn-card-primary" href={p.paperUrl} target="_blank" rel="noopener noreferrer">
                     <Icon name="link" size={16} />
-                    <span>Open Paper Link</span>
-                    <span className="btn-arrow" aria-hidden="true">→</span>
+                    <span>View Original PDF</span>
+                    <span className="btn-arrow" aria-hidden="true">↗</span>
                   </a>
                 ) : (
-                  <button className="btn btn-card-primary disabled" disabled aria-disabled="true" title="No paper link has been added">
+                  <button className="btn btn-card-primary disabled" disabled aria-disabled="true" title="No paper manuscript has been added">
                     <Icon name="link" size={16} />
-                    <span>Link unavailable</span>
+                    <span>PDF unavailable</span>
                   </button>
                 )}
                 <a className="btn btn-card-secondary" href={`#${firstBody}`}>
                   <Icon name="book" size={16} />
-                  <span>Read Full Text</span>
+                  <span>Read Extracted Text</span>
                 </a>
               </div>
             </aside>
@@ -172,8 +173,32 @@ export default async function PaperPage({ params }) {
             secs.map((s) => (
               <section id={s.id} key={s.id}>
                 <h2>{s.title}</h2>
-                {s.paras.map((t, i) => <p key={i}>{t}</p>)}
-                {s.link ? <p><a href={s.link} target="_blank" rel="noopener noreferrer" className="read-link">Open the paper <Icon name="arrow" size={16} /></a></p> : null}
+                {s.paras.map((t, i) => {
+                  if (t.includes('class="article-table-wrap"') || t.startsWith('<table')) {
+                    return (
+                      <div
+                        key={i}
+                        dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(t) }}
+                      />
+                    );
+                  }
+                  if (t.includes('\n- ') || t.startsWith('- ') || t.includes('\n* ') || t.startsWith('* ')) {
+                    const items = t.split(/\n?[-*]\s+/).map((x) => x.trim()).filter(Boolean);
+                    return (
+                      <ul key={i} className="article-list">
+                        {items.map((it, idx) => <li key={idx}>{it}</li>)}
+                      </ul>
+                    );
+                  }
+                  return <p key={i}>{t}</p>;
+                })}
+                {s.link ? (
+                  <p>
+                    <a href={s.link} target="_blank" rel="noopener noreferrer" className="read-link">
+                      Open original PDF manuscript <Icon name="arrow" size={16} />
+                    </a>
+                  </p>
+                ) : null}
                 {s.id === 'manuscript-pdf' && p.paperUrl ? (
                   <div style={{ marginTop: '1rem', marginBottom: '2rem' }}>
                     <div style={{ width: '100%', height: '750px', border: '1px solid var(--border, #e2e8f0)', borderRadius: '12px', overflow: 'hidden', background: '#525659' }}>
@@ -187,7 +212,11 @@ export default async function PaperPage({ params }) {
                     </div>
                   </div>
                 ) : null}
-                {s.refs && s.refs.length ? <ol>{s.refs.map((r, i) => <li key={i}>{r}</li>)}</ol> : null}
+                {s.refs && s.refs.length ? (
+                  <ol className="article-refs-list">
+                    {s.refs.map((r, i) => <li key={i}>{r}</li>)}
+                  </ol>
+                ) : null}
               </section>
             ))
           ) : (

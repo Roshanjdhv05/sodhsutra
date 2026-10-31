@@ -6,39 +6,45 @@ import { compressPdf, prettySize } from '@/lib/compress';
 const MAX_PDF_MB = 20;
 
 /**
- * Picks a PDF, compresses it in the browser using pdf-lib, shows a preview
- * iframe and compression stats, then uploads the result to Supabase Storage.
+ * Picks a PDF, compresses it losslessly, uploads it to Supabase Storage,
+ * and extracts structured research paper content (title, authors, abstract, keywords,
+ * sections, tables, and references).
  *
  * Props:
- *   value      – current public URL string (or '')
- *   onChange   – called with the new public URL after a successful upload
- *   onDetected – optional callback ({ title, context }) when title/abstract detected
- *   id         – base id for form-field association
- *   label      – visible label text
+ *   value       – current public URL string (or '')
+ *   onChange    – called with the new public URL after a successful upload
+ *   onExtracted – called with the full structured extracted paper data
+ *   onDetected  – backward-compatible callback with { title, context }
+ *   id          – base id for form-field association
+ *   label       – visible label text
  */
 export default function PdfUpload({
   value,
   onChange,
+  onExtracted,
   onDetected,
   id = 'pdf-file',
   label = 'Upload manuscript (PDF) *',
 }) {
   const inputRef = useRef(null);
 
-  const [status, setStatus] = useState('idle'); // idle | compressing | uploading | done | error
+  const [status, setStatus] = useState('idle'); // idle | compressing | extracting | done | error
   const [info, setInfo] = useState(null);        // { originalBytes, bytes, pct, compressed }
   const [err, setErr] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-  const [detectedText, setDetectedText] = useState(null);
+  const [extractedData, setExtractedData] = useState(null);
 
   /* ---- helpers ---- */
   const reset = () => {
     setStatus('idle');
     setInfo(null);
     setErr('');
-    setDetectedText(null);
-    if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(''); }
+    setExtractedData(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl('');
+    }
     setShowPreview(false);
     onChange('');
     if (inputRef.current) inputRef.current.value = '';
@@ -49,32 +55,40 @@ export default function PdfUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setErr(''); setInfo(null); setShowPreview(false); setDetectedText(null);
+    setErr('');
+    setInfo(null);
+    setShowPreview(false);
+    setExtractedData(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl('');
     onChange('');
 
     // Basic client-side validation
     if (file.type !== 'application/pdf') {
-      setErr('Only PDF files are accepted.'); return;
+      setErr('Only PDF files are accepted.');
+      return;
     }
     if (file.size > MAX_PDF_MB * 1024 * 1024) {
-      setErr(`File exceeds ${MAX_PDF_MB} MB. Please upload a smaller PDF.`); return;
+      setErr(`File exceeds ${MAX_PDF_MB} MB. Please upload a smaller PDF.`);
+      return;
     }
 
-    /* ---- Step 1: compress ---- */
+    /* ---- Step 1: Lossless optimization / validation ---- */
     setStatus('compressing');
     let result;
     try {
       result = await compressPdf(file);
-    } catch (ex) {
-      setErr(ex.message || 'Could not process that PDF.');
-      setStatus('error');
-      if (inputRef.current) inputRef.current.value = '';
-      return;
+    } catch {
+      // Graceful fallback to original file blob
+      result = {
+        blob: file,
+        originalBytes: file.size,
+        bytes: file.size,
+        pct: 0,
+        compressed: false,
+      };
     }
 
-    // Create a local preview URL from the (possibly compressed) blob
     const blobUrl = URL.createObjectURL(result.blob);
     setPreviewUrl(blobUrl);
     setInfo({
@@ -84,21 +98,26 @@ export default function PdfUpload({
       compressed: result.compressed,
     });
 
-    /* ---- Step 2: upload ---- */
-    setStatus('uploading');
+    /* ---- Step 2: Upload & Server Extraction ---- */
+    setStatus('extracting');
     try {
       const fd = new FormData();
       fd.append('file', new File([result.blob], file.name || 'manuscript.pdf', { type: 'application/pdf' }));
       const res = await fetch('/api/upload-pdf', { method: 'POST', body: fd });
       const json = await res.json().catch(() => ({}));
+
       if (!res.ok) throw new Error(json.error || 'Upload failed.');
+
       onChange(json.url);
-      if (json.detected) {
-        setDetectedText(json.detected);
-        if (onDetected) {
-          onDetected(json.detected);
-        }
+
+      if (json.extracted) {
+        setExtractedData(json.extracted);
+        if (onExtracted) onExtracted(json.extracted);
+        if (onDetected) onDetected({ title: json.extracted.title, context: json.extracted.abstract });
+      } else if (json.detected) {
+        if (onDetected) onDetected(json.detected);
       }
+
       setStatus('done');
     } catch (ex) {
       setErr(ex.message || 'Upload failed. Please try again.');
@@ -108,13 +127,13 @@ export default function PdfUpload({
     }
   }
 
-  const busy = status === 'compressing' || status === 'uploading';
+  const busy = status === 'compressing' || status === 'extracting';
 
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
       <div className="pdf-upload">
-        {/* File input (always rendered so the ref is stable) */}
+        {/* File input */}
         <div className="pdf-upload-input-row">
           <input
             ref={inputRef}
@@ -134,48 +153,76 @@ export default function PdfUpload({
         </div>
 
         <small className="hint" id={`${id}-hint`}>
-          PDF only · max {MAX_PDF_MB} MB · selectable text and formatting are preserved.
+          PDF only · max {MAX_PDF_MB} MB · selectable text, headings, and tables are automatically extracted.
         </small>
 
-        {/* Progress / status */}
+        {/* Progress status */}
         {busy && (
           <div className="pdf-upload-status">
             <div className="upload-bar"><i /></div>
-            <span className="muted">
-              {status === 'compressing' ? 'Compressing PDF…' : 'Uploading & detecting content…'}
+            <span className="muted" style={{ fontWeight: 600 }}>
+              {status === 'compressing' ? 'Analyzing & validating PDF…' : 'Extracting text, sections & tables…'}
             </span>
           </div>
         )}
 
-        {/* Detected title and context notice */}
-        {detectedText && (detectedText.title || detectedText.context) && (
+        {/* Scanned PDF warning notice */}
+        {extractedData && extractedData.ocrRequired && (
+          <div style={{
+            background: 'rgba(234, 88, 12, 0.1)',
+            border: '1px solid rgba(234, 88, 12, 0.35)',
+            borderRadius: '8px',
+            padding: '10px 14px',
+            marginTop: '10px',
+            fontSize: '13px',
+            color: '#c2410c',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            lineHeight: 1.5,
+          }}>
+            <Icon name="info" size={18} />
+            <div>
+              <strong>OCR Required:</strong> {extractedData.message}
+            </div>
+          </div>
+        )}
+
+        {/* Successful extraction notice */}
+        {extractedData && !extractedData.ocrRequired && (
           <div style={{
             background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            borderRadius: '6px',
-            padding: '8px 12px',
-            marginTop: '8px',
+            border: '1px solid rgba(34, 197, 94, 0.35)',
+            borderRadius: '8px',
+            padding: '10px 14px',
+            marginTop: '10px',
             fontSize: '13px',
             color: '#166534',
             display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
+            alignItems: 'flex-start',
+            gap: '10px',
+            lineHeight: 1.5,
           }}>
-            <Icon name="check" size={16} />
-            <span>
-              <strong>PDF Content Detected:</strong> Title and context were extracted and filled into the form.
-            </span>
+            <Icon name="check" size={18} />
+            <div>
+              <strong>Article Content Extracted & Organized:</strong>
+              <div style={{ fontSize: '12px', marginTop: '2px', color: '#15803d' }}>
+                Extracted Title, {extractedData.authors?.filter((a) => a.name)?.length || 0} Authors, Abstract, {extractedData.sections?.length || 0} Sections
+                {extractedData.tablesCount > 0 ? ` (${extractedData.tablesCount} HTML ${extractedData.tablesCount === 1 ? 'Table' : 'Tables'})` : ''}
+                {extractedData.refs?.length > 0 ? `, and ${extractedData.refs.length} References` : ''}.
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Compression stats */}
+        {/* Compression / Size stats */}
         {info && !busy && (
           <div className="pdf-compress-info">
             <Icon name="check" size={15} />
             <span>
               {info.compressed
-                ? <>Original: <strong>{prettySize(info.originalBytes)}</strong> → Compressed: <strong>{prettySize(info.bytes)}</strong> (<strong>{info.pct}% saved</strong>)</>
-                : <>Size: <strong>{prettySize(info.bytes)}</strong> — already optimal, original retained.</>
+                ? <>Original: <strong>{prettySize(info.originalBytes)}</strong> → Optimized: <strong>{prettySize(info.bytes)}</strong> ({info.pct}% saved)</>
+                : <>Size: <strong>{prettySize(info.bytes)}</strong> — preserved in original quality.</>
               }
             </span>
             {previewUrl && (
@@ -184,7 +231,7 @@ export default function PdfUpload({
                 className="btn btn-ghost btn-sm"
                 onClick={() => setShowPreview((v) => !v)}
               >
-                {showPreview ? 'Hide preview' : 'Preview PDF'}
+                {showPreview ? 'Hide original PDF' : 'Preview original PDF'}
               </button>
             )}
           </div>

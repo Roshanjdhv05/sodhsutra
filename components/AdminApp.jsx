@@ -180,6 +180,30 @@ function PaperForm({ row, data, onSave, onClose }) {
     }));
   };
 
+  const handlePdfExtracted = (extracted) => {
+    if (!extracted) return;
+    setF((prev) => ({
+      ...prev,
+      title: prev.title?.trim() ? prev.title : (extracted.title || prev.title || ''),
+      abstract: prev.abstract?.trim() ? prev.abstract : (extracted.abstract || prev.abstract || ''),
+      keywords: prev.keywords?.trim() ? prev.keywords : (Array.isArray(extracted.keywords) ? extracted.keywords.join(', ') : (extracted.keywords || prev.keywords || '')),
+      _extracted_full_text: extracted.full_text || '',
+      _extracted_refs: extracted.refs || [],
+    }));
+    // Auto-populate authors from extraction if form currently has only blank row
+    if (Array.isArray(extracted.authors) && extracted.authors.length > 0) {
+      setAuthors((prev) => {
+        const hasRealAuthor = prev.some((a) => a.name.trim());
+        if (hasRealAuthor) return prev;
+        return extracted.authors.map((a) => ({
+          name: typeof a === 'string' ? a : (a.name || ''),
+          institution: typeof a === 'object' ? (a.institution || '') : '',
+          designation: typeof a === 'object' ? (a.designation || '') : '',
+        }));
+      });
+    }
+  };
+
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
@@ -200,7 +224,8 @@ function PaperForm({ row, data, onSave, onClose }) {
       authors_text,
       institution,
       id: row?.id,
-      full_text: '',
+      full_text: f._extracted_full_text || '',
+      refs_text: Array.isArray(f._extracted_refs) ? f._extracted_refs.join('\n') : (f._extracted_refs || ''),
     });
     setBusy(false);
     if (!r.ok) setErr(r.error);
@@ -367,6 +392,7 @@ function PaperForm({ row, data, onSave, onClose }) {
             label="Upload manuscript (PDF) *"
             value={f.paper_url}
             onChange={(u) => set('paper_url', u)}
+            onExtracted={handlePdfExtracted}
             onDetected={handlePdfDetected}
           />
         </div>
