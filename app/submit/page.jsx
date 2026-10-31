@@ -58,8 +58,8 @@ export default async function SubmitPage() {
               <div className="submit-guideline-item">
                 <span className="submit-guideline-num">4</span>
                 <div>
-                  <h3 className="submit-guideline-title">Research Category</h3>
-                  <p>Select the category that best represents your paper's primary subject area. This helps the editorial team classify submissions and direct them to appropriate reviewers.</p>
+                  <h3 className="submit-guideline-title">Research Theme &amp; Manuscript Category</h3>
+                  <p>Select the manuscript category (e.g. Original Research Articles, Review Articles, Case Studies, etc.) and research theme that best represent your paper's format and primary subject area.</p>
                 </div>
               </div>
               <div className="submit-guideline-item">

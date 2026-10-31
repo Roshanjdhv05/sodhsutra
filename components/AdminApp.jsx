@@ -6,12 +6,11 @@ import CoverUpload from './CoverUpload';
 import PdfUpload from './PdfUpload';
 import {
   adminLogin, adminLogout, saveCategory, deleteCategory, saveAuthor, deleteAuthor, savePaper, deletePaper,
-  saveNews, deleteNews, setSubmissionStatus, deleteSubmission, publishSubmission, deleteMessage,
+  setSubmissionStatus, deleteSubmission, publishSubmission,
   saveVolume, deleteVolume,
 } from '@/app/admin/actions';
 import { fmt, slugify } from '@/lib/helpers';
-
-const CONTENT_TYPES = ['Original Research', 'Review Article', 'Essay', 'Policy Analysis', 'Case Study'];
+import { MANUSCRIPT_CATEGORIES } from '@/lib/data';
 const FORMATS = [['emp', 'Original / empirical'], ['rev', 'Review'], ['ess', 'Essay / policy'], ['cas', 'Case study']];
 const AUTHOR_TYPES = [['student', 'Student'], ['faculty', 'Teacher / Faculty'], ['researcher', 'Researcher']];
 const STYLES = ['Rings', 'Waves', 'Dot field', 'Diagonals', 'Triangles', 'Burst', 'Bars', 'Orbits'];
@@ -81,7 +80,7 @@ function CategoryForm({ row, onSave, onClose }) {
   return (
     <form onSubmit={submit} noValidate>
       <div className="formgrid c2">
-        <F id="c-name" label="Category name *"><input id="c-name" className="input" value={f.name} onChange={(e) => { set('name', e.target.value); if (!row && !f._slugEdited) set('slug', slugify(e.target.value)); }} autoFocus /></F>
+        <F id="c-name" label="Theme name *"><input id="c-name" className="input" value={f.name} onChange={(e) => { set('name', e.target.value); if (!row && !f._slugEdited) set('slug', slugify(e.target.value)); }} autoFocus /></F>
         <F id="c-short" label="Short name" hint="Used on cards and chips. Defaults to the full name."><input id="c-short" className="input" value={f.short_name} onChange={(e) => set('short_name', e.target.value)} /></F>
         <F id="c-slug" label="URL slug" hint="/categories/your-slug — leave as is unless you need a custom one."><input id="c-slug" className="input" value={f.slug} onChange={(e) => setF((s) => ({ ...s, slug: slugify(e.target.value), _slugEdited: true }))} /></F>
         <F id="c-order" label="Sort order" hint="Lower numbers appear first."><input id="c-order" className="input" type="number" value={f.sort_order} onChange={(e) => set('sort_order', e.target.value)} /></F>
@@ -90,9 +89,9 @@ function CategoryForm({ row, onSave, onClose }) {
             {ICON_NAMES.map((n) => <button type="button" key={n} className={f.icon === n ? 'on' : ''} onClick={() => set('icon', n)} aria-label={n} aria-pressed={f.icon === n}><Icon name={n} size={20} /></button>)}
           </div>
         </F>
-        <F id="c-desc" label="Description" full><textarea id="c-desc" className="input" rows={3} value={f.description} onChange={(e) => set('description', e.target.value)} /></F>
+        <F id="c-desc" label="Description" full><textarea id="c-desc" className="input" rows={3} value={f.description} onChange={(e) => set('description', e.target.value)} placeholder="Describe this academic research theme..." /></F>
       </div>
-      <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save category' : 'Create category'} />
+      <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save theme' : 'Create theme'} />
     </form>
   );
 }
@@ -164,7 +163,7 @@ function PaperForm({ row, data, onSave, onClose }) {
   const initialSections = extractSections(row?.full_text || '');
   const [f, setF] = useState(() => ({
     title: '', slug: '', abstract: '', category_slug: data.categories[0]?.slug || '', category2_slug: '', authorIds: [], published_on: today(), keywords: '',
-    views: 0, content_type: 'Original Research', format: 'rev', institution: '', featured: false, doi: '', peer_reviewed: false, is_demo: false,
+    views: 0, content_type: row?.content_type || 'Original Research Articles', format: 'rev', institution: '', featured: false, doi: '', peer_reviewed: false, is_demo: false,
     paper_url: '', cover_url: '', art_style: (n * 5 + 1) % 8, art_theme: (n * 7 + 2) % 6, art_seed: n + 1,
     authors_text: row ? (row.authorIds || []).map((id) => data.authors.find((a) => a.id === id)?.name).filter(Boolean).join(', ') : '',
     new_category_name: '',
@@ -187,6 +186,7 @@ function PaperForm({ row, data, onSave, onClose }) {
       refs_text: (row.refs || []).join('\n'),
       authors_text: (row.authorIds || []).map((id) => data.authors.find((a) => a.id === id)?.name).filter(Boolean).join(', '),
       new_category_name: '',
+      content_type: row.content_type || 'Original Research Articles',
       introduction: initialSections.introduction,
       scope_and_approach: initialSections.scope_and_approach,
       literature_review: initialSections.literature_review,
@@ -219,19 +219,26 @@ function PaperForm({ row, data, onSave, onClose }) {
       <div className="formgrid c2">
         <F id="p-title" label="Title *" full><input id="p-title" className="input" value={f.title} onChange={(e) => set('title', e.target.value)} autoFocus /></F>
         <F id="p-abs" label="Abstract *" hint="Appears under #abstract in contents." full><textarea id="p-abs" className="input" rows={4} value={f.abstract} onChange={(e) => set('abstract', e.target.value)} /></F>
-        <F id="p-cat" label="Category *">
+        <F id="p-type" label="Manuscript Category *">
+          <select id="p-type" className="select" value={f.content_type} onChange={(e) => set('content_type', e.target.value)}>
+            {MANUSCRIPT_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </F>
+        <F id="p-cat" label="Theme *">
           <select id="p-cat" className="select" value={f.category_slug} onChange={(e) => set('category_slug', e.target.value)}>
-            <option value="">Select a category</option>
+            <option value="">Select a theme</option>
             {data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-            <option value="__new__">+ Add new category...</option>
+            <option value="__new__">+ Add new theme...</option>
           </select>
         </F>
         {f.category_slug === '__new__' ? (
-          <F id="p-cat-new" label="New Category Name *" hint="Will automatically create and link this category.">
-            <input id="p-cat-new" className="input" placeholder="e.g. Quantum Computing" value={f.new_category_name} onChange={(e) => set('new_category_name', e.target.value)} autoFocus required />
+          <F id="p-cat-new" label="New Theme Name *" hint="Will automatically create and link this theme." full>
+            <input id="p-cat-new" className="input" placeholder="e.g. Artificial Intelligence, Renewable Energy" value={f.new_category_name} onChange={(e) => set('new_category_name', e.target.value)} autoFocus required />
           </F>
         ) : (
-          <F id="p-cat2" label="Second category (optional)"><select id="p-cat2" className="select" value={f.category2_slug} onChange={(e) => set('category2_slug', e.target.value)}><option value="">None</option>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></F>
+          <F id="p-cat2" label="Second theme (optional)"><select id="p-cat2" className="select" value={f.category2_slug} onChange={(e) => set('category2_slug', e.target.value)}><option value="">None</option>{data.categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></F>
         )}
         <F id="p-auth" label="Authors * (type author names, separated by commas)" hint="e.g. Dr. A. Sharma, Prof. R. Patel. New authors are created automatically." full>
           <input id="p-auth" className="input" placeholder="e.g. Dr. A. Sharma, Prof. R. Patel" value={f.authors_text} onChange={(e) => set('authors_text', e.target.value)} required />
@@ -261,36 +268,6 @@ function PaperForm({ row, data, onSave, onClose }) {
         <F id="p-refs" label="References (optional)" hint="One reference per line. Appears under #references in contents." full><textarea id="p-refs" className="input" rows={3} value={f.refs_text} onChange={(e) => set('refs_text', e.target.value)} placeholder="Author, A. (Year). Title. Journal..." /></F>
       </div>
       <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save paper' : 'Publish paper'} />
-    </form>
-  );
-}
-
-function NewsForm({ row, data, onSave, onClose }) {
-  const [f, setF] = useState(() => ({
-    title: '', slug: '', summary: '', category: data.news[0]?.category || 'Science Culture', published_on: today(), body_text: '', related_paper_slug: '', byline: 'ShodhSutra Editorial Desk',
-    art_style: (data.news.length * 3 + 2) % 8, art_theme: data.news.length % 6, art_seed: 100 + data.news.length, cover_url: '', is_demo: false,
-    ...(row ? { ...row, related_paper_slug: row.related_paper_slug || '', cover_url: row.cover_url || '', byline: row.byline || '', published_on: String(row.published_on).slice(0, 10), body_text: (row.body || []).join('\n\n') } : {}),
-  }));
-  const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
-  const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
-  const cats = [...new Set(data.news.map((n) => n.category))];
-  async function submit(e) { e.preventDefault(); setBusy(true); setErr(''); const r = await onSave({ ...f, id: row?.id }); setBusy(false); if (!r.ok) setErr(r.error); }
-  return (
-    <form onSubmit={submit} noValidate>
-      <div className="formgrid c2">
-        <F id="n-title" label="Headline *" full><input id="n-title" className="input" value={f.title} onChange={(e) => set('title', e.target.value)} autoFocus /></F>
-        <F id="n-sum" label="Summary *" full><textarea id="n-sum" className="input" rows={2} value={f.summary} onChange={(e) => set('summary', e.target.value)} /></F>
-        <F id="n-cat" label="News category *"><input id="n-cat" className="input" list="n-cats" value={f.category} onChange={(e) => set('category', e.target.value)} /><datalist id="n-cats">{cats.map((c) => <option key={c} value={c} />)}</datalist></F>
-        <F id="n-date" label="Date *"><input id="n-date" className="input" type="date" value={f.published_on} onChange={(e) => set('published_on', e.target.value)} /></F>
-        <F id="n-by" label="Byline"><input id="n-by" className="input" value={f.byline} onChange={(e) => set('byline', e.target.value)} /></F>
-        <F id="n-rel" label="Related paper (optional)"><select id="n-rel" className="select" value={f.related_paper_slug} onChange={(e) => set('related_paper_slug', e.target.value)}><option value="">None</option>{data.papers.map((p) => <option key={p.id} value={p.slug}>{p.title.slice(0, 70)}</option>)}</select></F>
-        <F id="n-body" label="Article text" hint="Separate paragraphs with a blank line." full><textarea id="n-body" className="input" rows={7} value={f.body_text} onChange={(e) => set('body_text', e.target.value)} /></F>
-        <div className="full"><CoverUpload id="n-cover" label="Thumbnail image (auto-compressed to under 10 KB)" value={f.cover_url} onChange={(u) => set('cover_url', u)} /></div>
-        <F id="n-style" label="Generated art style"><select id="n-style" className="select" value={f.art_style} onChange={(e) => set('art_style', +e.target.value)}>{STYLES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
-        <F id="n-theme" label="Colour"><select id="n-theme" className="select" value={f.art_theme} onChange={(e) => set('art_theme', +e.target.value)}>{THEMES.map((s, i) => <option key={s} value={i}>{s}</option>)}</select></F>
-        <div className="full field check"><label><input type="checkbox" checked={f.is_demo} onChange={(e) => set('is_demo', e.target.checked)} /> Sample article (shows a “sample” notice)</label></div>
-      </div>
-      <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save article' : 'Publish article'} />
     </form>
   );
 }
@@ -485,12 +462,10 @@ export default function AdminApp({ data }) {
 
   const match = (text) => !q.trim() || text.toLowerCase().includes(q.trim().toLowerCase());
   const tabs = [
-    ['papers', 'Papers', data.papers.length],
-    ['volumes', 'Volumes', (data.volumes || []).length],
-    ['categories', 'Categories', data.categories.length],
-    ['news', 'News', data.news.length],
+    ['papers', 'Articles', data.papers.length],
+    ['volumes', 'Issues', (data.volumes || []).length],
+    ['categories', 'Themes', data.categories.length],
     ['submissions', 'Submissions', pending || data.submissions.length],
-    ['messages', 'Messages', data.messages.length],
   ];
 
   const searchBox = <div className="search-box small"><Icon name="search" size={18} /><label className="sr" htmlFor="adm-q">Filter</label><input id="adm-q" type="search" placeholder="Filter…" value={q} onChange={(e) => setQ(e.target.value)} /></div>;
@@ -502,7 +477,7 @@ export default function AdminApp({ data }) {
         <div className="row" style={{ margin: 0 }}><a className="btn btn-ghost btn-sm" href="/" target="_blank" rel="noopener noreferrer">View site</a><button className="btn btn-ghost btn-sm" onClick={logout}><Icon name="logout" size={16} /> Log out</button></div>
       </div>
       <div className="admin-stats">
-        {[['Papers', data.papers.length], ['Volumes', (data.volumes || []).length], ['Categories', data.categories.length], ['News', data.news.length], ['New submissions', pending]].map(([l, v]) => <div className="admin-stat" key={l}><strong>{v}</strong><span>{l}</span></div>)}
+        {[['Articles', data.papers.length], ['Issues', (data.volumes || []).length], ['Themes', data.categories.length], ['New submissions', pending]].map(([l, v]) => <div className="admin-stat" key={l}><strong>{v}</strong><span>{l}</span></div>)}
       </div>
       {flash?.ok ? <p className="msg-ok" role="status">{flash.ok}</p> : null}
       {flash?.err ? <p className="msg-err" role="alert">{flash.err}</p> : null}
@@ -513,17 +488,18 @@ export default function AdminApp({ data }) {
 
       {tab === 'papers' && (
         <section>
-          <div className="panel-head"><h2>Papers</h2><div className="row" style={{ margin: 0 }}>{searchBox}<button className="btn btn-primary btn-sm" onClick={() => setModal({ kind: 'paper', row: null })}><Icon name="plus" size={16} /> New paper</button></div></div>
-          <div className="table-wrap"><table className="atable"><thead><tr><th>Cover</th><th>Title</th><th>Category</th><th>Authors</th><th>Date</th><th>Views</th><th>Flags</th><th /></tr></thead><tbody>
+          <div className="panel-head"><h2>Articles</h2><div className="row" style={{ margin: 0 }}>{searchBox}<button className="btn btn-primary btn-sm" onClick={() => setModal({ kind: 'paper', row: null })}><Icon name="plus" size={16} /> New article</button></div></div>
+          <div className="table-wrap"><table className="atable"><thead><tr><th>Cover</th><th>Title</th><th>Theme</th><th>Manuscript Category</th><th>Authors</th><th>Date</th><th>Views</th><th>Flags</th><th /></tr></thead><tbody>
             {data.papers.filter((p) => match(p.title + ' ' + p.slug)).sort((a, b) => (a.published_on < b.published_on ? 1 : -1)).map((p) => (
               <tr key={p.id}>
                 <td><Thumb url={p.cover_url} /></td>
                 <td className="ttl">{p.title}<span className="sub">/journals/{p.slug}</span></td>
                 <td>{catName[p.category_slug] || p.category_slug}</td>
+                <td><span className="pill ok" style={{ fontSize: '0.74rem' }}>{p.content_type || 'Original Research Articles'}</span></td>
                 <td>{p.authorIds.map((i) => authorName[i]).filter(Boolean).join(', ')}</td>
                 <td>{fmt(p.published_on)}</td><td>{p.views}</td>
                 <td>{p.featured ? <span className="pill">Featured</span> : null} {p.is_demo ? <span className="pill warn">Demo</span> : <span className="pill ok">Live</span>}</td>
-                <td><div className="acts"><button className="btn btn-ghost btn-sm" onClick={() => setModal({ kind: 'paper', row: p })}><Icon name="edit" size={15} /> Edit</button><button className="btn btn-danger btn-sm" onClick={() => remove(deletePaper, p.id, 'paper')}><Icon name="trash" size={15} /></button></div></td>
+                <td><div className="acts"><button className="btn btn-ghost btn-sm" onClick={() => setModal({ kind: 'paper', row: p })}><Icon name="edit" size={15} /> Edit</button><button className="btn btn-danger btn-sm" onClick={() => remove(deletePaper, p.id, 'article')}><Icon name="trash" size={15} /></button></div></td>
               </tr>
             ))}
           </tbody></table></div>
@@ -606,28 +582,14 @@ export default function AdminApp({ data }) {
 
       {tab === 'categories' && (
         <section>
-          <div className="panel-head"><h2>Categories</h2><div className="row" style={{ margin: 0 }}>{searchBox}<button className="btn btn-primary btn-sm" onClick={() => setModal({ kind: 'category', row: null })}><Icon name="plus" size={16} /> New category</button></div></div>
-          <div className="table-wrap"><table className="atable"><thead><tr><th>Icon</th><th>Name</th><th>Slug</th><th>Papers</th><th>Order</th><th /></tr></thead><tbody>
+          <div className="panel-head"><h2>Themes</h2><div className="row" style={{ margin: 0 }}>{searchBox}<button className="btn btn-primary btn-sm" onClick={() => setModal({ kind: 'category', row: null })}><Icon name="plus" size={16} /> New theme</button></div></div>
+          <div className="table-wrap"><table className="atable"><thead><tr><th>Icon</th><th>Theme</th><th>Slug</th><th>Articles</th><th>Order</th><th /></tr></thead><tbody>
             {data.categories.filter((c) => match(c.name + ' ' + c.slug)).map((c) => (
               <tr key={c.id}>
                 <td><Icon name={c.icon} size={22} /></td>
                 <td className="ttl">{c.name}<span className="sub">{c.description}</span></td><td>{c.slug}</td>
                 <td>{data.papers.filter((p) => p.category_slug === c.slug || p.category2_slug === c.slug).length}</td><td>{c.sort_order}</td>
-                <td><div className="acts"><button className="btn btn-ghost btn-sm" onClick={() => setModal({ kind: 'category', row: c })}><Icon name="edit" size={15} /> Edit</button><button className="btn btn-danger btn-sm" onClick={() => remove(deleteCategory, c.id, 'category')}><Icon name="trash" size={15} /></button></div></td>
-              </tr>
-            ))}
-          </tbody></table></div>
-        </section>
-      )}
-
-      {tab === 'news' && (
-        <section>
-          <div className="panel-head"><h2>News</h2><div className="row" style={{ margin: 0 }}>{searchBox}<button className="btn btn-primary btn-sm" onClick={() => setModal({ kind: 'news', row: null })}><Icon name="plus" size={16} /> New article</button></div></div>
-          <div className="table-wrap"><table className="atable"><thead><tr><th>Thumb</th><th>Headline</th><th>Category</th><th>Date</th><th /></tr></thead><tbody>
-            {data.news.filter((n) => match(n.title)).sort((a, b) => (a.published_on < b.published_on ? 1 : -1)).map((n) => (
-              <tr key={n.id}>
-                <td><Thumb url={n.cover_url} /></td><td className="ttl">{n.title}<span className="sub">/news/{n.slug}</span></td><td>{n.category}</td><td>{fmt(n.published_on)}</td>
-                <td><div className="acts"><button className="btn btn-ghost btn-sm" onClick={() => setModal({ kind: 'news', row: n })}><Icon name="edit" size={15} /> Edit</button><button className="btn btn-danger btn-sm" onClick={() => remove(deleteNews, n.id, 'article')}><Icon name="trash" size={15} /></button></div></td>
+                <td><div className="acts"><button className="btn btn-ghost btn-sm" onClick={() => setModal({ kind: 'category', row: c })}><Icon name="edit" size={15} /> Edit</button><button className="btn btn-danger btn-sm" onClick={() => remove(deleteCategory, c.id, 'theme')}><Icon name="trash" size={15} /></button></div></td>
               </tr>
             ))}
           </tbody></table></div>
@@ -637,8 +599,8 @@ export default function AdminApp({ data }) {
       {tab === 'submissions' && (
         <section>
           <div className="panel-head"><h2>Submissions</h2></div>
-          <p className="muted">Papers sent through the public Submit page. “Approve & publish” creates the author(s) and a live paper using the submitted link and cover; you can edit it afterwards.</p>
-          <div className="table-wrap"><table className="atable"><thead><tr><th>Cover</th><th>Paper</th><th>Author</th><th>Category</th><th>Status</th><th>Received</th><th /></tr></thead><tbody>
+          <p className="muted">Articles sent through the public Submit page. “Approve & publish” creates the author(s) and a live article using the submitted link and cover; you can edit it afterwards.</p>
+          <div className="table-wrap"><table className="atable"><thead><tr><th>Cover</th><th>Article</th><th>Author</th><th>Theme</th><th>Status</th><th>Received</th><th /></tr></thead><tbody>
             {data.submissions.map((s) => (
               <tr key={s.id}>
                 <td><Thumb url={s.cover_url} /></td>
@@ -657,24 +619,10 @@ export default function AdminApp({ data }) {
         </section>
       )}
 
-      {tab === 'messages' && (
-        <section>
-          <div className="panel-head"><h2>Contact messages</h2></div>
-          <div className="table-wrap"><table className="atable"><thead><tr><th>From</th><th>Message</th><th>Received</th><th /></tr></thead><tbody>
-            {data.messages.map((m) => (
-              <tr key={m.id}><td className="ttl">{m.name}<span className="sub"><a href={`mailto:${m.email}`}>{m.email}</a></span></td><td style={{ maxWidth: 520, whiteSpace: 'pre-wrap' }}>{m.message}</td><td>{fmt(String(m.created_at).slice(0, 10))}</td>
-                <td><div className="acts"><button className="btn btn-danger btn-sm" onClick={() => remove(deleteMessage, m.id, 'message')}><Icon name="trash" size={15} /></button></div></td></tr>
-            ))}
-            {!data.messages.length ? <tr><td colSpan={4} className="muted">No messages yet.</td></tr> : null}
-          </tbody></table></div>
-        </section>
-      )}
-
-      {modal?.kind === 'category' && <Modal title={modal.row ? 'Edit category' : 'New category'} onClose={() => setModal(null)}><CategoryForm row={modal.row} onClose={() => setModal(null)} onSave={(p) => save(saveCategory, p, modal.row ? 'Category saved.' : 'Category created.')} /></Modal>}
+      {modal?.kind === 'category' && <Modal title={modal.row ? 'Edit theme' : 'New theme'} onClose={() => setModal(null)}><CategoryForm row={modal.row} onClose={() => setModal(null)} onSave={(p) => save(saveCategory, p, modal.row ? 'Theme saved.' : 'Theme created.')} /></Modal>}
       {modal?.kind === 'volume' && <Modal title={modal.row ? 'Edit Volume' : 'New Volume'} onClose={() => setModal(null)}><VolumeForm row={modal.row} data={data} onClose={() => setModal(null)} onSave={(p) => save(saveVolume, p, modal.row ? 'Volume saved.' : 'Volume created.')} /></Modal>}
       {modal?.kind === 'author' && <Modal title={modal.row ? 'Edit author' : 'New author'} onClose={() => setModal(null)}><AuthorForm row={modal.row} onClose={() => setModal(null)} onSave={(p) => save(saveAuthor, p, modal.row ? 'Author saved.' : 'Author created.')} /></Modal>}
-      {modal?.kind === 'paper' && <Modal title={modal.row ? 'Edit paper' : 'New paper'} onClose={() => setModal(null)}><PaperForm row={modal.row} data={data} onClose={() => setModal(null)} onSave={(p) => save(savePaper, p, modal.row ? 'Paper saved.' : 'Paper published.')} /></Modal>}
-      {modal?.kind === 'news' && <Modal title={modal.row ? 'Edit article' : 'New article'} onClose={() => setModal(null)}><NewsForm row={modal.row} data={data} onClose={() => setModal(null)} onSave={(p) => save(saveNews, p, modal.row ? 'Article saved.' : 'Article published.')} /></Modal>}
+      {modal?.kind === 'paper' && <Modal title={modal.row ? 'Edit article' : 'New article'} onClose={() => setModal(null)}><PaperForm row={modal.row} data={data} onClose={() => setModal(null)} onSave={(p) => save(savePaper, p, modal.row ? 'Article saved.' : 'Article published.')} /></Modal>}
     </div>
   );
 }

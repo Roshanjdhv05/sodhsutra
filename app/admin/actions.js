@@ -167,7 +167,7 @@ export async function savePaper(p) {
   const row = {
     title, abstract: s(p.abstract), category_slug, category2_slug: nul(p.category2_slug, 80) === category_slug ? null : nul(p.category2_slug, 80),
     institution, published_on: s(p.published_on, 10), keywords: list(p.keywords).slice(0, 12), views: Math.max(0, int(p.views)),
-    content_type: s(p.content_type, 60) || 'Original Research', format: ['emp', 'rev', 'ess', 'cas'].includes(p.format) ? p.format : 'emp',
+    content_type: s(p.content_type, 120) || 'Original Research Articles', format: ['emp', 'rev', 'ess', 'cas'].includes(p.format) ? p.format : 'emp',
     featured: !!p.featured, doi: nul(p.doi, 120), paper_url: nul(p.paper_url, 800), peer_reviewed: !!p.peer_reviewed, is_demo: !!p.is_demo,
     cover_url: nul(p.cover_url, 600), art_style: ((int(p.art_style) % 8) + 8) % 8, art_theme: ((int(p.art_theme) % 6) + 6) % 6, art_seed: Math.max(1, int(p.art_seed, 1)),
     full_text: s(p.full_text, 60000), refs: s(p.refs_text, 12000).split('\n').map((x) => x.trim()).filter(Boolean),
@@ -281,7 +281,7 @@ export async function publishSubmission(id) {
   const { data: paper, error: e3 } = await sb.from('papers').insert({
     code: 'SS-' + Date.now().toString(36).toUpperCase(), slug, title: sub.title, abstract: sub.abstract, category_slug: sub.category_slug,
     institution: sub.institution, published_on: new Date().toISOString().slice(0, 10), keywords: sub.keywords || [], views: 0,
-    content_type: 'Original Research', format: 'emp', featured: false, paper_url: sub.paper_url, peer_reviewed: false, is_demo: false,
+    content_type: sub.content_type || 'Original Research Articles', format: 'emp', featured: false, paper_url: sub.paper_url, peer_reviewed: false, is_demo: false,
     cover_url: sub.cover_url, art_style: ((count || 0) * 5 + 1) % 8, art_theme: ((count || 0) * 7 + 2) % 6, art_seed: (count || 0) + 1, refs: [], full_text: '',
   }).select('id').single();
   if (e3) return fail(nice(e3));

@@ -26,28 +26,28 @@ export async function submitManuscript(input) {
 
   const sb = supabaseAdmin();
 
-  // If a new category was entered
+  // If a new theme was entered
   if (category === '__new__' || input.newCategory) {
     const catName = clean(input.newCategory, 120);
-    if (!catName || catName.length < 2) return { ok: false, error: 'Please enter a name for the new category.' };
+    if (!catName || catName.length < 2) return { ok: false, error: 'Please enter a name for the new theme.' };
     const { data: existingCat } = await sb.from('categories').select('slug').ilike('name', catName).limit(1).maybeSingle();
     if (existingCat) {
       category = existingCat.slug;
     } else {
-      const slug = clean(catName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), 80) || 'category';
+      const slug = clean(catName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), 80) || 'theme';
       const { data: createdCat } = await sb.from('categories').insert({
         name: catName,
         short_name: catName,
         slug,
         icon: 'book',
-        description: `Research category for ${catName}`,
+        description: `Research theme for ${catName}`,
         sort_order: 99,
       }).select('slug').single();
       category = createdCat?.slug || slug;
     }
   }
 
-  if (!category || category === '__new__') return { ok: false, error: 'Please choose or enter a category.' };
+  if (!category || category === '__new__') return { ok: false, error: 'Please choose or enter a theme.' };
   if (keywords.length < 3) return { ok: false, error: 'Enter 3 to 8 keywords.' };
   if (!validUrl(pdfUrl)) return { ok: false, error: 'Please upload your manuscript PDF before submitting.' };
   if (!input.declaration || !input.consent) return { ok: false, error: 'Please accept the declaration and the policies.' };
@@ -55,12 +55,20 @@ export async function submitManuscript(input) {
   const co = (Array.isArray(input.coauthors) ? input.coauthors : []).slice(0, 8)
     .map((c) => ({ name: clean(c?.name, 120), email: clean(c?.email, 200) })).filter((c) => c.name);
   const cover = clean(input.coverUrl, 600);
-  const { data, error } = await sb.from('submissions').insert({
+  const manuscriptCategory = clean(input.manuscriptCategory || input.content_type, 120) || 'Original Research Articles';
+
+  const baseSubmission = {
     title, abstract, author_name: name, author_email: email, coauthors: co, institution: inst, category_slug: category,
     keywords, paper_url: pdfUrl, cover_url: cover || null, declaration: true, consent: true, status: 'received',
-  }).select('id').single();
-  if (error) return { ok: false, error: 'Could not save your submission: ' + error.message };
-  return { ok: true, ref: 'SUB-' + String(data.id).slice(0, 8).toUpperCase() };
+  };
+
+  // Attempt to save with content_type; if column does not exist in submissions table, fallback cleanly
+  let res = await sb.from('submissions').insert({ ...baseSubmission, content_type: manuscriptCategory }).select('id').single();
+  if (res.error && (res.error.message.includes('column') || res.error.message.includes('content_type'))) {
+    res = await sb.from('submissions').insert(baseSubmission).select('id').single();
+  }
+  if (res.error) return { ok: false, error: 'Could not save your submission: ' + res.error.message };
+  return { ok: true, ref: 'SUB-' + String(res.data.id).slice(0, 8).toUpperCase() };
 }
 
 export async function sendMessage(input) {

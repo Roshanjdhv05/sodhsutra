@@ -4,7 +4,7 @@ import JournalsClient from '@/components/JournalsClient';
 
 export const metadata = {
   title: 'Articles',
-  description: 'Browse all published research articles, filter by category, author type, or publication year.',
+  description: 'Browse all published research articles, filter by theme, author type, or publication year.',
 };
 
 export default async function PublishedPapersPage({ searchParams }) {

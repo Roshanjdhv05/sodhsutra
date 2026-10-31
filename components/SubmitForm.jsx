@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { Icon } from './Icon';
 import PdfUpload from './PdfUpload';
 import { submitManuscript } from '@/app/actions';
+import { MANUSCRIPT_CATEGORIES } from '@/lib/data';
 
-const empty = { title: '', abstract: '', authorName: '', authorEmail: '', institution: '', category: '', newCategory: '', keywords: '', pdfUrl: '', declaration: false, consent: false, website: '' };
+const empty = { title: '', abstract: '', authorName: '', authorEmail: '', institution: '', category: '', newCategory: '', manuscriptCategory: 'Original Research Articles', keywords: '', pdfUrl: '', declaration: false, consent: false, website: '' };
 const words = (s) => (s.trim() ? s.trim().split(/\s+/).length : 0);
 
 function Field({ id, label, hint, error, children }) {
@@ -41,8 +42,8 @@ export default function SubmitForm({ categories }) {
     if (f.authorName.trim().length < 2) e.authorName = 'Enter the author\u2019s name.';
     if (!/^\S+@\S+\.\S+$/.test(f.authorEmail.trim())) e.authorEmail = 'Enter a valid email address.';
     if (!f.institution.trim()) e.institution = 'Enter an institution (or \u201cIndependent\u201d).';
-    if (!f.category) e.category = 'Choose a research category.';
-    if (f.category === '__new__' && !(f.newCategory || '').trim()) e.newCategory = 'Enter the name for the new category.';
+    if (!f.category) e.category = 'Choose a research theme.';
+    if (f.category === '__new__' && !(f.newCategory || '').trim()) e.newCategory = 'Enter the name for the new theme.';
     const kw = f.keywords.split(',').map((k) => k.trim()).filter(Boolean);
     if (kw.length < 3 || kw.length > 8) e.keywords = 'Enter 3 to 8 comma-separated keywords.';
     if (!f.pdfUrl) e.pdfUrl = 'Please upload your manuscript PDF before submitting.';
@@ -103,18 +104,30 @@ export default function SubmitForm({ categories }) {
           ))}
           {co.length < 8 ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => setCo((l) => [...l, { name: '', email: '' }])}>+ Add author</button> : null}
         </fieldset>
+        <Field id="f-manuscript-cat" label="Manuscript Category *">
+          <select
+            className="select"
+            id="f-manuscript-cat"
+            value={f.manuscriptCategory}
+            onChange={(e) => set('manuscriptCategory', e.target.value)}
+          >
+            {MANUSCRIPT_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </Field>
         <div className="two">
           <Field id="f-institution" label="Institution *" error={errs.institution}><input className="input" id="f-institution" autoComplete="organization" value={f.institution} onChange={(e) => set('institution', e.target.value)} aria-invalid={!!errs.institution} /></Field>
-          <Field id="f-category" label="Research category *" error={errs.category}>
+          <Field id="f-category" label="Research theme *" error={errs.category}>
             <select className="select" id="f-category" value={f.category} onChange={(e) => set('category', e.target.value)} aria-invalid={!!errs.category}>
-              <option value="">Select a category</option>
+              <option value="">Select a theme</option>
               {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-              <option value="__new__">+ Add new category...</option>
+              <option value="__new__">+ Add new theme...</option>
             </select>
           </Field>
         </div>
         {f.category === '__new__' && (
-          <Field id="f-new-category" label="New Category Name *" error={errs.newCategory} hint="Your suggested category will be added to the journal.">
+          <Field id="f-new-category" label="New Theme Name *" error={errs.newCategory} hint="Your suggested theme will be added to the journal.">
             <input
               className="input"
               id="f-new-category"

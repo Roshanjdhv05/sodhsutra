@@ -62,7 +62,7 @@ export default async function Home() {
       </div></section>
 
       <section className="section tint"><div className="container">
-        <div className="section-head reveal"><div><p className="eyebrow">Browse by discipline</p><h2>Explore Research Categories</h2></div><Link className="more" href="/published-papers">All articles <Icon name="arrow" size={16} /></Link></div>
+        <div className="section-head reveal"><div><p className="eyebrow">Browse by discipline</p><h2>Explore Research Themes</h2></div><Link className="more" href="/published-papers">All articles <Icon name="arrow" size={16} /></Link></div>
         <div className="cat-grid">
           {CATS.map((c) => (
             <Link className="cat-tile reveal" href={`/published-papers?cat=${c.slug}`} key={c.slug}>

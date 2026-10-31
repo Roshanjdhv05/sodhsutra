@@ -45,9 +45,9 @@ export default function JournalsClient({ data, initial }) {
             <input className="input" id="f-q" type="search" placeholder="Title, author, keywords…" value={st.q} onChange={(e) => set('q', e.target.value)} />
           </div>
         </div>
-        <fieldset><legend>Category</legend>
+        <fieldset><legend>Theme</legend>
           <div className="radios scroll">
-            <label><input type="radio" name="cat" value="" checked={!st.cat} onChange={() => set('cat', '')} /> All categories <em>{P.length}</em></label>
+            <label><input type="radio" name="cat" value="" checked={!st.cat} onChange={() => set('cat', '')} /> All themes <em>{P.length}</em></label>
             {CATS.map((c) => <label key={c.slug}><input type="radio" name="cat" value={c.slug} checked={st.cat === c.slug} onChange={() => set('cat', c.slug)} /> {c.short} <em>{P.filter((p) => h.inCat(p, c.slug)).length}</em></label>)}
           </div>
         </fieldset>
