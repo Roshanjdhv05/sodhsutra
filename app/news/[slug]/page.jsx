@@ -28,7 +28,7 @@ export default async function ArticlePage({ params }) {
         <div className="editorial-banner"><Icon name="info" size={18} /> <span><strong>Editorial content.</strong> This is a news article, not a peer-reviewed research paper.</span></div>
         <div className="news-hero"><Thumb n={n} /></div>
         <p className="byline">{n.byline} · <time dateTime={n.date}>{h.fmt(n.date)}</time></p>
-        <div className="prose">{n.body.map((b, i) => <p key={i}>{b}</p>)}</div>
+        <div className="prose">{(Array.isArray(n.body) ? n.body : []).map((b, i) => <p key={i}>{b}</p>)}</div>
         {rp ? (
           <aside className="related-paper"><p className="eyebrow">Related research</p><Link href={`/journals/${rp.slug}`}>{rp.title}</Link><span>{h.authorNames(rp)}</span></aside>
         ) : null}

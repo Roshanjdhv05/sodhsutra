@@ -8,7 +8,8 @@ export default async function Home() {
   const D = await getAll();
   if (D.error) return <SetupNotice error={D.error} />;
   const h = makeHelpers(D);
-  const { papers: P, categories: CATS } = D;
+  const P = D.papers || [];
+  const CATS = D.categories || [];
   const feat = P.find((p) => p.featured) || [...P].sort(h.byDate)[0];
   const latest = [...P].sort(h.byDate).slice(0, 6);
   const hasDemo = P.some((p) => p.demo);

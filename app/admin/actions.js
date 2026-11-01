@@ -1,7 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin, isAdminConfigured } from '@/lib/supabase';
-import { extractPaperFromPdfBuffer } from '@/lib/pdf-extract';
 import { isAdmin, checkPassword, startAdminSession, endAdminSession, adminPasswordSet } from '@/lib/admin-auth';
 import { slugify } from '@/lib/helpers';
 
@@ -324,6 +323,7 @@ export async function publishSubmission(id) {
       const resp = await fetch(sub.paper_url);
       if (resp.ok) {
         const buf = Buffer.from(await resp.arrayBuffer());
+        const { extractPaperFromPdfBuffer } = await import('@/lib/pdf-extract');
         const extracted = await extractPaperFromPdfBuffer(buf, 'manuscript.pdf');
         if (extracted && !extracted.ocrRequired) {
           extractedFullText = extracted.full_text || '';

@@ -6,13 +6,13 @@ import { sectionsFor, citeBase } from '@/lib/sections';
 import { Icon } from '@/components/Icon';
 import { PaperCard, Avatar, SetupNotice } from '@/components/ui';
 import { ProgressBar, Toc, CiteBox, ShareRow } from '@/components/PaperTools';
-import { sanitizeArticleHtml } from '@/lib/pdf-extract';
+import { sanitizeArticleHtml } from '@/lib/sanitize';
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const D = await getAll();
   const p = D.papers.find((x) => x.slug === slug);
-  return { title: p ? p.title : 'Paper', description: p ? p.abstract.slice(0, 160) : undefined };
+  return { title: p ? p.title : 'Paper', description: p?.abstract ? String(p.abstract).slice(0, 160) : undefined };
 }
 
 export default async function PaperPage({ params }) {
@@ -28,24 +28,26 @@ export default async function PaperPage({ params }) {
   const firstBody = secs[0]?.id || (p.paperUrl ? 'manuscript-pdf' : 'about-authors');
 
   // Format clean DOI URL and display text
-  const doiUrl = p.doi
-    ? (p.doi.startsWith('http') ? p.doi : `https://doi.org/${p.doi}`)
+  const doiStr = typeof p.doi === 'string' ? p.doi.trim() : '';
+  const doiUrl = doiStr
+    ? (doiStr.startsWith('http') ? doiStr : `https://doi.org/${doiStr}`)
     : null;
-  const doiDisplay = p.doi
-    ? (p.doi.startsWith('http') ? p.doi.replace(/^https?:\/\/(doi\.org\/)?/, '') : p.doi)
+  const doiDisplay = doiStr
+    ? (doiStr.startsWith('http') ? doiStr.replace(/^https?:\/\/(doi\.org\/)?/, '') : doiStr)
     : 'Not assigned';
 
   // Extract first sentence of abstract for subtitle/lede
-  const firstSentence = p.abstract
-    ? (p.abstract.split(/(?<=[.?!])\s+/)[0] || p.abstract).trim()
+  const absStr = typeof p.abstract === 'string' ? p.abstract.trim() : '';
+  const firstSentence = absStr
+    ? (absStr.split(/(?<=[.?!])\s+/)[0] || absStr).trim()
     : null;
 
   const citeMeta = {
-    authorNames: p.authors.map((s) => h.author(s)?.name).filter(Boolean),
-    year: p.year,
-    title: p.title,
+    authorNames: (p.authors || []).map((s) => h.author(s)?.name).filter(Boolean),
+    year: p.year || 2026,
+    title: p.title || '',
     journal: 'ShodhSutra',
-    doi: p.doi,
+    doi: p.doi || null,
     url: `https://shodhsutra.com/journals/${p.slug}`,
     defaultStyle: p.citationStyle || 'apa',
   };
