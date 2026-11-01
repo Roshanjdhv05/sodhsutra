@@ -187,10 +187,9 @@ function PaperForm({ row, data, onSave, onClose }) {
   const [err, setErr] = useState('');
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
 
-  const handlePdfDetected = ({ title, context }) => {
+  const handlePdfDetected = ({ context }) => {
     setF((prev) => ({
       ...prev,
-      title: prev.title?.trim() ? prev.title : (title || ''),
       abstract: prev.abstract?.trim() ? prev.abstract : (context || ''),
     }));
   };
@@ -199,24 +198,11 @@ function PaperForm({ row, data, onSave, onClose }) {
     if (!extracted) return;
     setF((prev) => ({
       ...prev,
-      title: prev.title?.trim() ? prev.title : (extracted.title || prev.title || ''),
       abstract: prev.abstract?.trim() ? prev.abstract : (extracted.abstract || prev.abstract || ''),
       keywords: prev.keywords?.trim() ? prev.keywords : (Array.isArray(extracted.keywords) ? extracted.keywords.join(', ') : (extracted.keywords || prev.keywords || '')),
       _extracted_full_text: extracted.full_text || '',
       _extracted_refs: extracted.refs || [],
     }));
-    // Auto-populate authors from extraction if form currently has only blank row
-    if (Array.isArray(extracted.authors) && extracted.authors.length > 0) {
-      setAuthors((prev) => {
-        const hasRealAuthor = prev.some((a) => a.name.trim());
-        if (hasRealAuthor) return prev;
-        return extracted.authors.map((a) => ({
-          name: typeof a === 'string' ? a : (a.name || ''),
-          institution: typeof a === 'object' ? (a.institution || '') : '',
-          designation: typeof a === 'object' ? (a.designation || '') : '',
-        }));
-      });
-    }
   };
 
   async function submit(e) {
@@ -256,7 +242,7 @@ function PaperForm({ row, data, onSave, onClose }) {
             className="input"
             value={f.title}
             onChange={(e) => set('title', e.target.value)}
-            placeholder="Paper title (auto-detected when uploading PDF)"
+            placeholder="Enter paper title"
             autoFocus
           />
         </F>

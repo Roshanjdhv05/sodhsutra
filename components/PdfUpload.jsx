@@ -207,7 +207,7 @@ export default function PdfUpload({
             <div>
               <strong>Article Content Extracted & Organized:</strong>
               <div style={{ fontSize: '12px', marginTop: '2px', color: '#15803d' }}>
-                Extracted Title, {extractedData.authors?.filter((a) => a.name)?.length || 0} Authors, Abstract, {extractedData.sections?.length || 0} Sections
+                Extracted Abstract, {extractedData.sections?.length || 0} Sections
                 {extractedData.tablesCount > 0 ? ` (${extractedData.tablesCount} HTML ${extractedData.tablesCount === 1 ? 'Table' : 'Tables'})` : ''}
                 {extractedData.refs?.length > 0 ? `, and ${extractedData.refs.length} References` : ''}.
               </div>
