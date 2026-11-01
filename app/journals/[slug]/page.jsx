@@ -5,7 +5,7 @@ import { makeHelpers } from '@/lib/helpers';
 import { sectionsFor, citeBase } from '@/lib/sections';
 import { Icon } from '@/components/Icon';
 import { PaperCard, Avatar, SetupNotice } from '@/components/ui';
-import { ProgressBar, Toc, CiteBox, ShareRow } from '@/components/PaperTools';
+import { ProgressBar, CiteBox, ShareRow } from '@/components/PaperTools';
 import { sanitizeArticleHtml } from '@/lib/sanitize';
 
 import { SITE_URL as SITE } from '@/lib/site';
@@ -107,8 +107,9 @@ export default async function PaperPage({ params }) {
   if (!p) notFound();
   const c = h.cat(p.cat);
   const secs = sectionsFor(p, h);
+  const otherSecs = secs.filter((s) => s.id !== 'manuscript-pdf');
   const rel = h.related(p);
-  const firstBody = secs[0]?.id || (p.paperUrl ? 'manuscript-pdf' : 'about-authors');
+  const firstBody = p.paperUrl ? 'manuscript-pdf' : (otherSecs[0]?.id || 'about-authors');
 
   // Format clean DOI URL and display text
   const doiStr = typeof p.doi === 'string' ? p.doi.trim() : '';
@@ -241,10 +242,10 @@ export default async function PaperPage({ params }) {
 
               <div className="author-card-actions">
                 {p.paperUrl ? (
-                  <a className="btn btn-card-primary" href={p.paperUrl} target="_blank" rel="noopener noreferrer">
+                  <a className="btn btn-card-primary" href="#manuscript-pdf">
                     <Icon name="link" size={16} />
                     <span>View Original PDF</span>
-                    <span className="btn-arrow" aria-hidden="true">↗</span>
+                    <span className="btn-arrow" aria-hidden="true">↓</span>
                   </a>
                 ) : (
                   <button className="btn btn-card-primary disabled" disabled aria-disabled="true" title="No paper manuscript has been added">
@@ -252,10 +253,12 @@ export default async function PaperPage({ params }) {
                     <span>PDF unavailable</span>
                   </button>
                 )}
-                <a className="btn btn-card-secondary" href={`#${firstBody}`}>
-                  <Icon name="book" size={16} />
-                  <span>Read Extracted Text</span>
-                </a>
+                {p.paperUrl ? (
+                  <a className="btn btn-card-secondary" href={p.paperUrl} target="_blank" rel="noopener noreferrer">
+                    <Icon name="book" size={16} />
+                    <span>Open in new tab ↗</span>
+                  </a>
+                ) : null}
                 <a className="btn btn-card-ghost" href="#cite">
                   <Icon name="copy" size={16} />
                   <span>Cite This Paper</span>
@@ -266,11 +269,37 @@ export default async function PaperPage({ params }) {
         </div>
       </section>
 
-      <section className="container article-body">
-        {secs.length > 0 ? <Toc secs={secs} /> : null}
+      <section className="container article-body article-body--no-toc">
         <article className="prose">
-          {secs.length > 0 ? (
-            secs.map((s) => (
+          {/* Directly show Original Manuscript (PDF) */}
+          {p.paperUrl ? (
+            <section id="manuscript-pdf" style={{ marginBottom: '2.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                <h2 style={{ margin: 0 }}>Original Manuscript (PDF)</h2>
+                <a
+                  href={p.paperUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="read-link"
+                >
+                  Open in new tab <Icon name="arrow" size={16} />
+                </a>
+              </div>
+              <div style={{ width: '100%', height: 'clamp(540px, 80vh, 900px)', border: '1px solid var(--border, #e2e8f0)', borderRadius: '12px', overflow: 'hidden', background: '#525659', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+                <iframe
+                  src={`${p.paperUrl}#toolbar=1`}
+                  title={p.title}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 'none' }}
+                />
+              </div>
+            </section>
+          ) : null}
+
+          {/* Extracted text sections (if available) */}
+          {otherSecs.length > 0 ? (
+            otherSecs.map((s) => (
               <section id={s.id} key={s.id}>
                 <h2>{s.title}</h2>
                 {s.paras.map((t, i) => {
@@ -299,19 +328,6 @@ export default async function PaperPage({ params }) {
                     </a>
                   </p>
                 ) : null}
-                {s.id === 'manuscript-pdf' && p.paperUrl ? (
-                  <div style={{ marginTop: '1rem', marginBottom: '2rem' }}>
-                    <div style={{ width: '100%', height: '750px', border: '1px solid var(--border, #e2e8f0)', borderRadius: '12px', overflow: 'hidden', background: '#525659' }}>
-                      <iframe
-                        src={`${p.paperUrl}#toolbar=1`}
-                        title={p.title}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 'none' }}
-                      />
-                    </div>
-                  </div>
-                ) : null}
                 {s.refs && s.refs.length ? (
                   <ol className="article-refs-list">
                     {s.refs.map((r, i) => <li key={i}>{r}</li>)}
@@ -319,14 +335,14 @@ export default async function PaperPage({ params }) {
                 ) : null}
               </section>
             ))
-          ) : (
+          ) : (!p.paperUrl ? (
             <section>
               <p className="muted">No content sections have been added for this paper.</p>
               {p.keywords && p.keywords.length ? (
                 <ul className="tags kw" aria-label="Keywords">{p.keywords.map((k) => <li key={k}><Link href={`/search?q=${encodeURIComponent(k)}`}>{k}</Link></li>)}</ul>
               ) : null}
             </section>
-          )}
+          ) : null)}
           <CiteBox base={citeBase(p, h)} meta={citeMeta} />
           <ShareRow title={p.title} />
           <section className="about-authors">

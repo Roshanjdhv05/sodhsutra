@@ -533,6 +533,18 @@ fieldset{border:0;padding:0;margin:0 0 18px}.check label{display:flex;gap:10px;a
   .article-body{grid-template-columns:220px minmax(0,1fr);gap:48px}
   .article-body .prose{border-left:1px solid #ECE4DD;padding-left:48px}
 }
+.article-body.article-body--no-toc,
+.article-body:not(:has(.toc)){
+  display:block;
+  max-width:1080px;
+  margin-inline:auto;
+}
+.article-body.article-body--no-toc .prose,
+.article-body:not(:has(.toc)) .prose{
+  border-left:none;
+  padding-left:0;
+  max-width:100%;
+}
 
 /* Table of contents matching reference design */
 .toc{align-self:start;position:sticky;top:92px;font-size:.9rem}
