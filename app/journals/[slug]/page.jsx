@@ -2,11 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAll } from '@/lib/data';
 import { makeHelpers } from '@/lib/helpers';
-import { sectionsFor, citeBase } from '@/lib/sections';
+import { citeBase } from '@/lib/sections';
 import { Icon } from '@/components/Icon';
 import { PaperCard, Avatar, SetupNotice } from '@/components/ui';
 import { ProgressBar, CiteBox, ShareRow } from '@/components/PaperTools';
-import { sanitizeArticleHtml } from '@/lib/sanitize';
 
 import { SITE_URL as SITE } from '@/lib/site';
 
@@ -106,10 +105,8 @@ export default async function PaperPage({ params }) {
   const p = D.papers.find((x) => x.slug === slug);
   if (!p) notFound();
   const c = h.cat(p.cat);
-  const secs = sectionsFor(p, h);
-  const otherSecs = secs.filter((s) => s.id !== 'manuscript-pdf');
   const rel = h.related(p);
-  const firstBody = p.paperUrl ? 'manuscript-pdf' : (otherSecs[0]?.id || 'about-authors');
+  const firstBody = p.paperUrl ? 'manuscript-pdf' : 'cite';
 
   // Format clean DOI URL and display text
   const doiStr = typeof p.doi === 'string' ? p.doi.trim() : '';
@@ -295,54 +292,11 @@ export default async function PaperPage({ params }) {
                 />
               </div>
             </section>
-          ) : null}
-
-          {/* Extracted text sections (if available) */}
-          {otherSecs.length > 0 ? (
-            otherSecs.map((s) => (
-              <section id={s.id} key={s.id}>
-                <h2>{s.title}</h2>
-                {s.paras.map((t, i) => {
-                  if (t.includes('class="article-table-wrap"') || t.startsWith('<table')) {
-                    return (
-                      <div
-                        key={i}
-                        dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(t) }}
-                      />
-                    );
-                  }
-                  if (t.includes('\n- ') || t.startsWith('- ') || t.includes('\n* ') || t.startsWith('* ')) {
-                    const items = t.split(/\n?[-*]\s+/).map((x) => x.trim()).filter(Boolean);
-                    return (
-                      <ul key={i} className="article-list">
-                        {items.map((it, idx) => <li key={idx}>{it}</li>)}
-                      </ul>
-                    );
-                  }
-                  return <p key={i}>{t}</p>;
-                })}
-                {s.link ? (
-                  <p>
-                    <a href={s.link} target="_blank" rel="noopener noreferrer" className="read-link">
-                      Open original PDF manuscript <Icon name="arrow" size={16} />
-                    </a>
-                  </p>
-                ) : null}
-                {s.refs && s.refs.length ? (
-                  <ol className="article-refs-list">
-                    {s.refs.map((r, i) => <li key={i}>{r}</li>)}
-                  </ol>
-                ) : null}
-              </section>
-            ))
-          ) : (!p.paperUrl ? (
-            <section>
-              <p className="muted">No content sections have been added for this paper.</p>
-              {p.keywords && p.keywords.length ? (
-                <ul className="tags kw" aria-label="Keywords">{p.keywords.map((k) => <li key={k}><Link href={`/search?q=${encodeURIComponent(k)}`}>{k}</Link></li>)}</ul>
-              ) : null}
+          ) : (
+            <section style={{ marginBottom: '2rem' }}>
+              <p className="muted">PDF manuscript is not currently available for this paper.</p>
             </section>
-          ) : null)}
+          )}
           <CiteBox base={citeBase(p, h)} meta={citeMeta} />
           <ShareRow title={p.title} />
           <section className="about-authors">
