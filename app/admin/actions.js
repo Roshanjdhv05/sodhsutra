@@ -189,6 +189,9 @@ export async function savePaper(p) {
   let institution = s(p.authors_data?.[0]?.institution, 200) || s(p.institution, 200);
   if (!institution) { const { data } = await sb.from('authors').select('institution').eq('id', authorIds[0]).maybeSingle(); institution = data?.institution || 'Independent'; }
 
+  const validStyles = ['apa', 'ieee', 'mla', 'harvard', 'chicago', 'vancouver'];
+  const citation_style = validStyles.includes(p.citation_style) ? p.citation_style : 'apa';
+
   const row = {
     title, abstract: s(p.abstract), category_slug, category2_slug: nul(p.category2_slug, 80) === category_slug ? null : nul(p.category2_slug, 80),
     institution, published_on: s(p.published_on, 10), keywords: list(p.keywords).slice(0, 12), views: Math.max(0, int(p.views)),
@@ -196,6 +199,7 @@ export async function savePaper(p) {
     featured: !!p.featured, doi: nul(p.doi, 120), paper_url: nul(p.paper_url, 800), peer_reviewed: !!p.peer_reviewed, is_demo: !!p.is_demo,
     cover_url: nul(p.cover_url, 600), art_style: ((int(p.art_style) % 8) + 8) % 8, art_theme: ((int(p.art_theme) % 6) + 6) % 6, art_seed: Math.max(1, int(p.art_seed, 1)),
     full_text: s(p.full_text, 60000), refs: s(p.refs_text, 12000).split('\n').map((x) => x.trim()).filter(Boolean),
+    citation_style,
   };
 
   let id = p.id;
@@ -203,13 +207,24 @@ export async function savePaper(p) {
     const { data: old } = await sb.from('papers').select('cover_url').eq('id', id).maybeSingle();
     const slug = slugify(p.slug || '') || undefined;
     if (row.featured) await sb.from('papers').update({ featured: false }).neq('id', id);
-    const { error } = await sb.from('papers').update({ ...row, ...(slug ? { slug } : {}) }).eq('id', id);
+    let { error } = await sb.from('papers').update({ ...row, ...(slug ? { slug } : {}) }).eq('id', id);
+    if (error && /citation_style/i.test(error.message)) {
+      const { citation_style: _, ...cleanRow } = row;
+      const retry = await sb.from('papers').update({ ...cleanRow, ...(slug ? { slug } : {}) }).eq('id', id);
+      error = retry.error;
+    }
     if (error) return fail(nice(error));
     if (old?.cover_url && old.cover_url !== row.cover_url) await removeCover(sb, old.cover_url);
   } else {
     const slug = await uniqueSlug(sb, 'papers', p.slug || title);
     if (row.featured) await sb.from('papers').update({ featured: false }).eq('featured', true);
-    const { data, error } = await sb.from('papers').insert({ ...row, slug, code: 'SS-' + Date.now().toString(36).toUpperCase() }).select('id').single();
+    let { data, error } = await sb.from('papers').insert({ ...row, slug, code: 'SS-' + Date.now().toString(36).toUpperCase() }).select('id').single();
+    if (error && /citation_style/i.test(error.message)) {
+      const { citation_style: _, ...cleanRow } = row;
+      const retry = await sb.from('papers').insert({ ...cleanRow, slug, code: 'SS-' + Date.now().toString(36).toUpperCase() }).select('id').single();
+      data = retry.data;
+      error = retry.error;
+    }
     if (error) return fail(nice(error));
     id = data.id;
   }
@@ -320,13 +335,24 @@ export async function publishSubmission(id) {
 
   const { count } = await sb.from('papers').select('id', { count: 'exact', head: true });
   const slug = await uniqueSlug(sb, 'papers', sub.title);
-  const { data: paper, error: e3 } = await sb.from('papers').insert({
+  let insRes = await sb.from('papers').insert({
     code: 'SS-' + Date.now().toString(36).toUpperCase(), slug, title: sub.title, abstract: sub.abstract, category_slug: sub.category_slug,
     institution: sub.institution, published_on: new Date().toISOString().slice(0, 10), keywords: sub.keywords || [], views: 0,
     content_type: sub.content_type || 'Original Research Articles', format: 'emp', featured: false, paper_url: sub.paper_url, peer_reviewed: false, is_demo: false,
-    cover_url: sub.cover_url, art_style: ((count || 0) * 5 + 1) % 8, art_theme: ((count || 0) * 7 + 2) % 6, art_seed: (count || 0) + 1, refs: extractedRefs, full_text: extractedFullText,
+    cover_url: sub.cover_url, art_style: ((count || 0) * 5 + 1) % 8, art_theme: ((count || 0) * 7 + 2) % 6, art_seed: (count || 0) + 1,
+    refs: extractedRefs, full_text: extractedFullText, citation_style: 'apa',
   }).select('id').single();
-  if (e3) return fail(nice(e3));
+  if (insRes.error && /citation_style/i.test(insRes.error.message)) {
+    insRes = await sb.from('papers').insert({
+      code: 'SS-' + Date.now().toString(36).toUpperCase(), slug, title: sub.title, abstract: sub.abstract, category_slug: sub.category_slug,
+      institution: sub.institution, published_on: new Date().toISOString().slice(0, 10), keywords: sub.keywords || [], views: 0,
+      content_type: sub.content_type || 'Original Research Articles', format: 'emp', featured: false, paper_url: sub.paper_url, peer_reviewed: false, is_demo: false,
+      cover_url: sub.cover_url, art_style: ((count || 0) * 5 + 1) % 8, art_theme: ((count || 0) * 7 + 2) % 6, art_seed: (count || 0) + 1,
+      refs: extractedRefs, full_text: extractedFullText,
+    }).select('id').single();
+  }
+  if (insRes.error) return fail(nice(insRes.error));
+  const paper = insRes.data;
   const link = await sb.from('paper_authors').insert(ids.map((author_id, i) => ({ paper_id: paper.id, author_id, position: i + 1 })));
   if (link.error) return fail(nice(link.error));
   await sb.from('submissions').update({ status: 'published' }).eq('id', id);

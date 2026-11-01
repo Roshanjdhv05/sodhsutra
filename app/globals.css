@@ -1025,3 +1025,279 @@ noscript .reveal{opacity:1}
   margin-bottom:6px;
 }
 .pdf-preview-close{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+/* ---------------- Citation Styles & Preview (Admin & Paper Page) ---------------- */
+.btn-card-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1.5px solid var(--line, #EBDFD3);
+  color: var(--ink, #1F1A17);
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: all 0.2s var(--ease);
+  cursor: pointer;
+}
+.btn-card-ghost:hover {
+  border-color: var(--o, #F26A1B);
+  color: var(--o, #F26A1B);
+  background: rgba(242, 106, 27, 0.04);
+}
+
+/* Citation Picker in Admin Paper Form */
+.cite-picker-section {
+  margin-top: 8px;
+}
+.cite-live-preview-box {
+  background: var(--o1, #FFF1E6);
+  border: 1px solid var(--o2, #FFE0C7);
+  border-left: 4px solid var(--o, #F26A1B);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.cite-live-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.cite-live-preview-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cite-badge {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--o6, #DD5A0E);
+  background: rgba(242, 106, 27, 0.12);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.cite-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #15803d;
+}
+.cite-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+}
+.cite-live-preview-text {
+  font-family: Georgia, serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink, #1F1A17);
+  word-break: break-word;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(242, 106, 27, 0.15);
+}
+
+.cite-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+.cite-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  background: #fff;
+  border: 1.5px solid var(--line, #EBDFD3);
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-height: 130px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  color: var(--ink, #1F1A17);
+}
+.cite-card:hover {
+  border-color: var(--o, #F26A1B);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(242, 106, 27, 0.08);
+}
+.cite-card--selected {
+  border-color: var(--o, #F26A1B) !important;
+  background: linear-gradient(180deg, #FFF9F5 0%, #FFFFFF 100%) !important;
+  box-shadow: 0 0 0 1px var(--o, #F26A1B), 0 4px 14px rgba(242, 106, 27, 0.12) !important;
+}
+.cite-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.cite-card-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+.cite-radio-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--line, #CBD5E1);
+  display: inline-block;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.cite-radio-indicator.on {
+  border-color: var(--o, #F26A1B);
+}
+.cite-radio-indicator.on::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--o, #F26A1B);
+}
+.cite-selected-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--o, #F26A1B);
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+.cite-card-snippet {
+  font-family: Georgia, serif;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ink2, #4B423B);
+  margin: 4px 0 8px;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.cite-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--mut, #7A6D63);
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  padding-top: 6px;
+}
+.cite-card-tag {
+  font-weight: 700;
+  color: var(--ink2, #4B423B);
+}
+.cite-card-action {
+  font-weight: 600;
+  color: var(--o6, #DD5A0E);
+}
+
+/* Rich Citation Panel on Published Paper Detail Page */
+.cite-box--rich {
+  background: var(--o1, #FFF1E6);
+  border-left: 4px solid var(--o, #F26A1B);
+  padding: 24px;
+  border-radius: 8px;
+  margin: 32px 0;
+}
+.cite-box-header h2 {
+  font-size: 1.35rem;
+  margin-bottom: 2px;
+}
+.cite-box-sub {
+  font-size: 0.88rem;
+  color: var(--mut, #7A6D63);
+  margin: 0 0 16px;
+}
+.cite-style-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(242, 106, 27, 0.15);
+  padding-bottom: 8px;
+}
+.cite-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(242, 106, 27, 0.2);
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink2, #4B423B);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+.cite-tab:hover {
+  background: #fff;
+  border-color: var(--o, #F26A1B);
+  color: var(--o, #F26A1B);
+}
+.cite-tab--active {
+  background: var(--o, #F26A1B) !important;
+  color: #fff !important;
+  border-color: var(--o, #F26A1B) !important;
+  box-shadow: 0 2px 6px rgba(242, 106, 27, 0.25);
+}
+.cite-tab-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.75;
+}
+.cite-text-wrap {
+  background: #fff;
+  border: 1px solid var(--line, #EBDFD3);
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.cite-text {
+  font-family: Georgia, serif;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--ink, #1F1A17);
+  word-break: break-word;
+  margin: 0;
+}
+.cite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.cite-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.cite-copied {
+  background: #15803d !important;
+  border-color: #15803d !important;
+  color: #fff !important;
+}

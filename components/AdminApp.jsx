@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Icon, ICON_NAMES } from './Icon';
 import CoverUpload from './CoverUpload';
 import PdfUpload from './PdfUpload';
+import CitationPicker from './CitationPicker';
 import {
   adminLogin, adminLogout, saveCategory, deleteCategory, saveAuthor, deleteAuthor, savePaper, deletePaper,
   setSubmissionStatus, deleteSubmission, publishSubmission,
@@ -153,7 +154,7 @@ function PaperForm({ row, data, onSave, onClose }) {
     content_type: row?.content_type || 'Original Research Articles',
     format: 'rev', institution: '', featured: false, doi: '', peer_reviewed: false, is_demo: false,
     paper_url: '', cover_url: '', art_style: (n * 5 + 1) % 8, art_theme: (n * 7 + 2) % 6, art_seed: n + 1,
-    new_category_name: '',
+    new_category_name: '', citation_style: row?.citation_style || row?.citationStyle || 'apa',
     ...(row ? {
       ...row,
       category2_slug: row.category2_slug || '',
@@ -165,8 +166,22 @@ function PaperForm({ row, data, onSave, onClose }) {
       keywords: (row.keywords || []).join(', '),
       new_category_name: '',
       content_type: row.content_type || 'Original Research Articles',
+      citation_style: row.citation_style || row.citationStyle || 'apa',
     } : {}),
   }));
+
+  const paperMeta = useMemo(() => {
+    const authorNames = authors.map((a) => a.name.trim()).filter(Boolean);
+    const pubDate = f.published_on ? new Date(f.published_on) : new Date();
+    const yr = !isNaN(pubDate.getTime()) ? pubDate.getFullYear() : 2026;
+    return {
+      authorNames,
+      year: yr,
+      title: f.title || '',
+      journal: 'ShodhSutra',
+      doi: f.doi || '',
+    };
+  }, [authors, f.published_on, f.title, f.doi]);
 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -224,6 +239,7 @@ function PaperForm({ row, data, onSave, onClose }) {
       authors_text,
       institution,
       id: row?.id,
+      citation_style: f.citation_style || 'apa',
       full_text: f._extracted_full_text || '',
       refs_text: Array.isArray(f._extracted_refs) ? f._extracted_refs.join('\n') : (f._extracted_refs || ''),
     });
@@ -399,6 +415,23 @@ function PaperForm({ row, data, onSave, onClose }) {
         <F id="p-doi" label="DOI (only if verified)">
           <input id="p-doi" className="input" value={f.doi} onChange={(e) => set('doi', e.target.value)} placeholder="10.xxxx/xxxxx" />
         </F>
+
+        {/* Section: Citation Style & Preview */}
+        <div className="full" style={{ marginTop: '0.75rem', marginBottom: '0.5rem' }}>
+          <div style={{ marginBottom: '8px' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink, #111)' }}>
+              Citation Style &amp; Preview
+            </span>
+            <p className="hint" style={{ marginTop: '2px', marginBottom: '8px' }}>
+              Select the preferred default citation style for this paper. The live preview updates automatically as paper details change.
+            </p>
+          </div>
+          <CitationPicker
+            selected={f.citation_style || 'apa'}
+            onSelect={(styleId) => set('citation_style', styleId)}
+            paperMeta={paperMeta}
+          />
+        </div>
       </div>
       <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save paper' : 'Publish paper'} />
     </form>

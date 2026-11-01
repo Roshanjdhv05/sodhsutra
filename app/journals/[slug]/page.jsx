@@ -40,6 +40,16 @@ export default async function PaperPage({ params }) {
     ? (p.abstract.split(/(?<=[.?!])\s+/)[0] || p.abstract).trim()
     : null;
 
+  const citeMeta = {
+    authorNames: p.authors.map((s) => h.author(s)?.name).filter(Boolean),
+    year: p.year,
+    title: p.title,
+    journal: 'ShodhSutra',
+    doi: p.doi,
+    url: `https://shodhsutra.com/journals/${p.slug}`,
+    defaultStyle: p.citationStyle || 'apa',
+  };
+
   return (
     <>
       <ProgressBar />
@@ -160,6 +170,10 @@ export default async function PaperPage({ params }) {
                   <Icon name="book" size={16} />
                   <span>Read Extracted Text</span>
                 </a>
+                <a className="btn btn-card-ghost" href="#cite">
+                  <Icon name="copy" size={16} />
+                  <span>Cite This Paper</span>
+                </a>
               </div>
             </aside>
           </div>
@@ -227,7 +241,7 @@ export default async function PaperPage({ params }) {
               ) : null}
             </section>
           )}
-          <CiteBox base={citeBase(p, h)} />
+          <CiteBox base={citeBase(p, h)} meta={citeMeta} />
           <ShareRow title={p.title} />
           <section className="about-authors">
             <h2>About the {p.authors.length > 1 ? 'authors' : 'author'}</h2>
