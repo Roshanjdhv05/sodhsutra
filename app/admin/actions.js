@@ -199,6 +199,8 @@ export async function savePaper(p) {
     cover_url: nul(p.cover_url, 600), art_style: ((int(p.art_style) % 8) + 8) % 8, art_theme: ((int(p.art_theme) % 6) + 6) % 6, art_seed: Math.max(1, int(p.art_seed, 1)),
     full_text: s(p.full_text, 60000), refs: s(p.refs_text, 12000).split('\n').map((x) => x.trim()).filter(Boolean),
     citation_style,
+    page_start: p.page_start ? int(p.page_start) || null : null,
+    page_end: p.page_end ? int(p.page_end) || null : null,
   };
 
   let id = p.id;
@@ -212,6 +214,11 @@ export async function savePaper(p) {
       const retry = await sb.from('papers').update({ ...cleanRow, ...(slug ? { slug } : {}) }).eq('id', id);
       error = retry.error;
     }
+    if (error && /page_start|page_end/i.test(error.message)) {
+      const { page_start: _ps, page_end: _pe, citation_style: _cs, ...cleanRow } = row;
+      const retry = await sb.from('papers').update({ ...cleanRow, ...(slug ? { slug } : {}) }).eq('id', id);
+      error = retry.error;
+    }
     if (error) return fail(nice(error));
     if (old?.cover_url && old.cover_url !== row.cover_url) await removeCover(sb, old.cover_url);
   } else {
@@ -220,6 +227,12 @@ export async function savePaper(p) {
     let { data, error } = await sb.from('papers').insert({ ...row, slug, code: 'SS-' + Date.now().toString(36).toUpperCase() }).select('id').single();
     if (error && /citation_style/i.test(error.message)) {
       const { citation_style: _, ...cleanRow } = row;
+      const retry = await sb.from('papers').insert({ ...cleanRow, slug, code: 'SS-' + Date.now().toString(36).toUpperCase() }).select('id').single();
+      data = retry.data;
+      error = retry.error;
+    }
+    if (error && /page_start|page_end/i.test(error.message)) {
+      const { page_start: _ps, page_end: _pe, citation_style: _cs, ...cleanRow } = row;
       const retry = await sb.from('papers').insert({ ...cleanRow, slug, code: 'SS-' + Date.now().toString(36).toUpperCase() }).select('id').single();
       data = retry.data;
       error = retry.error;
@@ -318,6 +331,8 @@ export async function publishSubmission(id) {
   // Extract PDF content if available
   let extractedFullText = '';
   let extractedRefs = [];
+  let extractedPageStart = null;
+  let extractedPageEnd = null;
   if (sub.paper_url) {
     try {
       const resp = await fetch(sub.paper_url);
@@ -328,6 +343,8 @@ export async function publishSubmission(id) {
         if (extracted && !extracted.ocrRequired) {
           extractedFullText = extracted.full_text || '';
           extractedRefs = extracted.refs || [];
+          if (extracted.pageStart) extractedPageStart = extracted.pageStart;
+          if (extracted.pageEnd) extractedPageEnd = extracted.pageEnd;
         }
       }
     } catch { /* best effort – proceed without extraction */ }
@@ -335,21 +352,22 @@ export async function publishSubmission(id) {
 
   const { count } = await sb.from('papers').select('id', { count: 'exact', head: true });
   const slug = await uniqueSlug(sb, 'papers', sub.title);
-  let insRes = await sb.from('papers').insert({
+  const insertRow = {
     code: 'SS-' + Date.now().toString(36).toUpperCase(), slug, title: sub.title, abstract: sub.abstract, category_slug: sub.category_slug,
     institution: sub.institution, published_on: new Date().toISOString().slice(0, 10), keywords: sub.keywords || [], views: 0,
     content_type: sub.content_type || 'Original Research Articles', format: 'emp', featured: false, paper_url: sub.paper_url, peer_reviewed: false, is_demo: false,
     cover_url: sub.cover_url, art_style: ((count || 0) * 5 + 1) % 8, art_theme: ((count || 0) * 7 + 2) % 6, art_seed: (count || 0) + 1,
     refs: extractedRefs, full_text: extractedFullText, citation_style: 'apa',
-  }).select('id').single();
+    page_start: extractedPageStart, page_end: extractedPageEnd,
+  };
+  let insRes = await sb.from('papers').insert(insertRow).select('id').single();
   if (insRes.error && /citation_style/i.test(insRes.error.message)) {
-    insRes = await sb.from('papers').insert({
-      code: 'SS-' + Date.now().toString(36).toUpperCase(), slug, title: sub.title, abstract: sub.abstract, category_slug: sub.category_slug,
-      institution: sub.institution, published_on: new Date().toISOString().slice(0, 10), keywords: sub.keywords || [], views: 0,
-      content_type: sub.content_type || 'Original Research Articles', format: 'emp', featured: false, paper_url: sub.paper_url, peer_reviewed: false, is_demo: false,
-      cover_url: sub.cover_url, art_style: ((count || 0) * 5 + 1) % 8, art_theme: ((count || 0) * 7 + 2) % 6, art_seed: (count || 0) + 1,
-      refs: extractedRefs, full_text: extractedFullText,
-    }).select('id').single();
+    const { citation_style: _, ...rowNoCite } = insertRow;
+    insRes = await sb.from('papers').insert(rowNoCite).select('id').single();
+  }
+  if (insRes.error && /page_start|page_end/i.test(insRes.error.message)) {
+    const { page_start: _ps, page_end: _pe, citation_style: _cs, ...rowNoPages } = insertRow;
+    insRes = await sb.from('papers').insert(rowNoPages).select('id').single();
   }
   if (insRes.error) return fail(nice(insRes.error));
   const paper = insRes.data;

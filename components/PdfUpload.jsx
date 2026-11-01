@@ -208,6 +208,7 @@ export default function PdfUpload({
               <strong>Article Content Extracted & Organized:</strong>
               <div style={{ fontSize: '12px', marginTop: '2px', color: '#15803d' }}>
                 Extracted Abstract, {extractedData.sections?.length || 0} Sections
+                {extractedData.pageStart ? `, Pages ${extractedData.pageStart}${extractedData.pageEnd && extractedData.pageEnd !== extractedData.pageStart ? `–${extractedData.pageEnd}` : ''}` : ''}
                 {extractedData.tablesCount > 0 ? ` (${extractedData.tablesCount} HTML ${extractedData.tablesCount === 1 ? 'Table' : 'Tables'})` : ''}
                 {extractedData.refs?.length > 0 ? `, and ${extractedData.refs.length} References` : ''}.
               </div>

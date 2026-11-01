@@ -76,6 +76,12 @@ export async function generateMetadata({ params }) {
     if (vol.issueNo) scholarMeta['citation_issue'] = String(vol.issueNo);
   }
 
+  // Page range — detected from PDF footer or manually entered
+  if (p.pages) {
+    scholarMeta['citation_firstpage'] = String(p.pageStart || p.pages.split(/[–\-]/)[0]).trim();
+    if (p.pageEnd) scholarMeta['citation_lastpage'] = String(p.pageEnd).trim();
+  }
+
   return {
     title: p.title || 'Paper',
     description: p.abstract ? String(p.abstract).slice(0, 160) : `Research paper published on ShodhSutra`,
@@ -127,6 +133,7 @@ export default async function PaperPage({ params }) {
     doi: p.doi || null,
     url: `https://shodhsutra.com/journals/${p.slug}`,
     defaultStyle: p.citationStyle || 'apa',
+    pages: p.pages || undefined,
   };
 
   return (
