@@ -109,7 +109,7 @@ export default function SiteHeader({ data }) {
         <div className={`drawer ${drawer ? 'open' : ''}`} id="drawer" role="dialog" aria-modal="true" aria-label="Navigation Menu">
           <div className="drawer-head">
             <Link className="brand" href="/" onClick={() => setDrawer(false)} aria-label={`${data.brand} home`}>
-              <Logo size={36} />
+              <Logo size={52} />
               <span>{data.brand}</span>
             </Link>
             <button className="icon-btn" onClick={() => setDrawer(false)} aria-label="Close menu">
