@@ -9,7 +9,11 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const D = await getAll();
   const n = D.news.find((x) => x.slug === slug);
-  return { title: n ? n.title : 'News', description: n?.summary };
+  return {
+    title: n ? n.title : 'News',
+    description: n?.summary,
+    alternates: { canonical: `https://shodhsutra.com/news/${slug}` },
+  };
 }
 
 export default async function ArticlePage({ params }) {

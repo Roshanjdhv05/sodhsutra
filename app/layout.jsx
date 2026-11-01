@@ -9,6 +9,8 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: { default: `${BRAND} — Ideas that move knowledge forward`, template: `%s — ${BRAND}` },
   description: `${BRAND} — a multidisciplinary research journal platform for students, teachers and independent researchers.`,
+  metadataBase: new URL('https://shodhsutra.com'),
+  alternates: { canonical: '/' },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '32x32' },

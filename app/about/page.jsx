@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import StaticPage, { Ph } from '@/components/StaticPage';
 
-export const metadata = { title: 'About' };
+export const metadata = { title: 'About', alternates: { canonical: 'https://shodhsutra.com/about' } };
 
 export default function About() {
   return (

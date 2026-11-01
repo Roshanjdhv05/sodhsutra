@@ -8,11 +8,88 @@ import { PaperCard, Avatar, SetupNotice } from '@/components/ui';
 import { ProgressBar, Toc, CiteBox, ShareRow } from '@/components/PaperTools';
 import { sanitizeArticleHtml } from '@/lib/sanitize';
 
+import { SITE_URL as SITE } from '@/lib/site';
+
+/** Normalise a raw DOI string — returns bare DOI like "10.1234/abc" or null */
+function normaliseDoi(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  return raw.trim()
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//i, '')
+    .replace(/^doi:/i, '')
+    .trim() || null;
+}
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const D = await getAll();
-  const p = D.papers.find((x) => x.slug === slug);
-  return { title: p ? p.title : 'Paper', description: p?.abstract ? String(p.abstract).slice(0, 160) : undefined };
+  const p = D.papers?.find((x) => x.slug === slug);
+
+  if (!p) return { title: 'Paper Not Found' };
+
+  const h = makeHelpers(D);
+
+  const canonicalUrl = `${SITE}/journals/${slug}`;
+  const doi = normaliseDoi(p.doi);
+  const authors = (p.authors || []).map((s) => h.author(s)?.name).filter(Boolean);
+
+  // Build Google Scholar citation_* meta tags (name/content pairs injected via `other`)
+  const scholarMeta = {};
+
+  scholarMeta['citation_title'] = p.title || 'Untitled';
+
+  // One entry per author — Next.js `other` supports arrays
+  // We store as pipe-separated and split below, or use direct array approach
+  // Actually Next.js `other` accepts arrays when the key is repeated — use array values
+  if (authors.length > 0) {
+    scholarMeta['citation_author'] = authors; // Next.js renders one <meta> per array entry
+  }
+
+  if (p.date) {
+    // Google Scholar expects YYYY/MM/DD
+    const d = String(p.date).slice(0, 10).replace(/-/g, '/');
+    scholarMeta['citation_publication_date'] = d;
+  }
+
+  scholarMeta['citation_journal_title'] = 'ShodhSutra';
+
+  if (p.paperUrl) {
+    scholarMeta['citation_pdf_url'] = p.paperUrl;
+  }
+
+  if (p.abstract) {
+    scholarMeta['citation_abstract'] = String(p.abstract).slice(0, 500);
+  }
+
+  if (p.keywords && p.keywords.length > 0) {
+    scholarMeta['citation_keywords'] = p.keywords.join('; ');
+  }
+
+  if (doi) {
+    scholarMeta['citation_doi'] = doi;
+  }
+
+  // Volume / issue from the volumes list if available
+  const vols = D.volumes || [];
+  const vol = vols.find((v) => (v.paperIds || []).includes(p.id));
+  if (vol) {
+    if (vol.volNo) scholarMeta['citation_volume'] = String(vol.volNo);
+    if (vol.issueNo) scholarMeta['citation_issue'] = String(vol.issueNo);
+  }
+
+  return {
+    title: p.title || 'Paper',
+    description: p.abstract ? String(p.abstract).slice(0, 160) : `Research paper published on ShodhSutra`,
+    alternates: { canonical: canonicalUrl },
+    openGraph: {
+      title: p.title,
+      description: p.abstract ? String(p.abstract).slice(0, 200) : undefined,
+      url: canonicalUrl,
+      type: 'article',
+      ...(authors.length > 0 && { authors }),
+      publishedTime: p.date,
+    },
+    other: scholarMeta,
+  };
 }
 
 export default async function PaperPage({ params }) {

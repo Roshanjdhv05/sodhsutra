@@ -5,7 +5,7 @@ import { Icon } from '@/components/Icon';
 import { PageHead, Cover, Avatar, AuthorCard, SetupNotice } from '@/components/ui';
 import StudentFilter from '@/components/StudentFilter';
 
-export const metadata = { title: 'Student Research' };
+export const metadata = { title: 'Student Research', alternates: { canonical: 'https://shodhsutra.com/student-research' } };
 
 export default async function StudentPage() {
   const D = await getAll();

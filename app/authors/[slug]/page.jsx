@@ -8,7 +8,10 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const D = await getAll();
   const a = D.authors.find((x) => x.slug === slug);
-  return { title: a ? a.name : 'Author' };
+  return {
+    title: a ? a.name : 'Author',
+    alternates: { canonical: `https://shodhsutra.com/authors/${slug}` },
+  };
 }
 
 export default async function AuthorPage({ params }) {
