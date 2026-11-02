@@ -390,17 +390,30 @@ export async function saveVolume(v) {
   const year_label = s(v.year_label, 50);
   if (!year_label) return fail('Academic year is required (e.g., 2026- 2027).');
 
+  const meta = {
+    pdf_url: s(v.pdf_url, 1000),
+    patrons: s(v.patrons, 10000),
+    advisory_board: s(v.advisory_board, 10000),
+    editorial_board: {
+      editor_in_chief: s(v.editor_in_chief, 2000),
+      managing_editor: s(v.managing_editor, 2000),
+      members: s(v.members, 10000),
+    },
+    reviewer_committee: s(v.reviewer_committee, 10000),
+    text: s(v.description_text || v.description, 5000),
+  };
+
   const row = {
     name,
     year_label,
     period_label: s(v.period_label, 100),
     volume_no: Math.max(1, int(v.volume_no, 1)),
     issue_no: Math.max(1, int(v.issue_no, 1)),
-    description: s(v.description, 1000),
+    description: JSON.stringify(meta),
     cover_url: nul(v.cover_url, 600),
-    art_style: ((int(v.art_style) % 8) + 8) % 8,
-    art_theme: ((int(v.art_theme) % 6) + 6) % 6,
-    art_seed: Math.max(1, int(v.art_seed, 1)),
+    art_style: 0,
+    art_theme: 0,
+    art_seed: 1,
     published: v.published !== false,
   };
 
@@ -420,9 +433,9 @@ export async function saveVolume(v) {
       id = data.id;
     }
 
-    // Update junction table volume_papers
-    await sb.from('volume_papers').delete().eq('volume_id', id);
+    // Update junction table volume_papers if paperIds provided
     if (paperIds.length > 0) {
+      await sb.from('volume_papers').delete().eq('volume_id', id);
       const items = paperIds.map((paper_id, i) => ({
         volume_id: id,
         paper_id,

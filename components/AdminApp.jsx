@@ -457,6 +457,78 @@ function PaperForm({ row, data, onSave, onClose }) {
   );
 }
 
+const DEFAULT_PATRONS = `CA Anil Ganu
+President, Parle Tilak Vidyalaya Association
+
+Adv. Vinay Jog
+Vice President, Parle Tilak Vidyalaya Association
+
+Shri Dilip Pethe
+Hon. Secretary, Parle Tilak Vidyalaya Association
+
+Shri Bansidhar Dhurandhar
+Hon. Treasurer, Parle Tilak Vidyalaya Association
+
+CA Mukund Chitale
+Director, Parle Tilak Vidyalaya Association
+
+CA Pramod Lele
+Director, Parle Tilak Vidyalaya Association`;
+
+const DEFAULT_ADVISORY = `Prof. Dr. D. T. Shirke
+Vice Chancellor, Warana University
+
+Dr. Apoorva Palkar
+Vice Chancellor, Ratan Tata Maharashtra State Skill University
+
+Prof. Varadraj Bapat
+Director, Shailesh J. Mehta School of Management, IIT Bombay
+
+Shri Satish Marathe
+Director, Reserve Bank of India (RBI)
+
+Prof Dr Yashodhan Mithare
+Dean, Faculty of Commerce & Management, H V Desai College, Pune`;
+
+const DEFAULT_EDITOR_IN_CHIEF = `Prof. Dr. Minal Mapuskar
+Principal, Mulund College of Commerce (Autonomous)`;
+
+const DEFAULT_MANAGING_EDITOR = `Dr. Rajashri Deshpande
+Chairperson, Research Assessment, Promotion & Ethics Committee`;
+
+const DEFAULT_MEMBERS = `Prof. Dr. Kedar Marulkar
+Head, Department of Commerce, Shivaji University, Kolhapur
+
+CMA Dr. Kinnery Thakkar
+Head, Department of Commerce, University of Mumbai
+
+Dr. Swapnali Mahadik
+Assistant Professor, MCA, DES's NMITD
+
+Dr. Arjun Lakhe
+Associate Professor, Dept. Of Business Economics, MCC (Mumbai)
+
+Dr. Kanchana Sattur
+Assistant Professor, Dept. Of Management Studies, MCC (Mumbai)
+
+Dr. Jyotika Chheda
+Assistant Professor, Dept. Of Information Technology, MCC (Mumbai)
+
+Dr. Shayeree Ghosh
+Assistant Professor, Dept. Of English & Indian Languages, MCC (Mumbai)
+
+Dr Sandhya Pandey
+Assistant Professor, Dept. Of Information Technology, MCC (Mumbai)`;
+
+const DEFAULT_REVIEWERS = `CMA Dr. Kinnery Thakkar
+Head, Department of Commerce, University of Mumbai
+
+Prof. Dr. Kedar Marulkar
+Head, Department of Commerce, Shivaji University
+
+Dr. Swapnali Mahadik
+Assistant Professor, MCA, DES's NMITD`;
+
 function VolumeForm({ row, data, onSave, onClose }) {
   const [f, setF] = useState(() => ({
     name: 'Volume 1 - Issue 1',
@@ -464,39 +536,29 @@ function VolumeForm({ row, data, onSave, onClose }) {
     period_label: 'July- September 2026',
     volume_no: 1,
     issue_no: 1,
-    description: '',
     cover_url: '',
-    art_style: 0,
-    art_theme: 0,
-    art_seed: 101,
-    paperIds: [],
+    pdf_url: '',
+    patrons: DEFAULT_PATRONS,
+    advisory_board: DEFAULT_ADVISORY,
+    editor_in_chief: DEFAULT_EDITOR_IN_CHIEF,
+    managing_editor: DEFAULT_MANAGING_EDITOR,
+    members: DEFAULT_MEMBERS,
+    reviewer_committee: DEFAULT_REVIEWERS,
+    description_text: '',
     published: true,
     ...(row || {}),
+    patrons: row?.patrons ?? DEFAULT_PATRONS,
+    advisory_board: row?.advisory_board ?? DEFAULT_ADVISORY,
+    editor_in_chief: row?.editor_in_chief ?? DEFAULT_EDITOR_IN_CHIEF,
+    managing_editor: row?.managing_editor ?? DEFAULT_MANAGING_EDITOR,
+    members: row?.members ?? DEFAULT_MEMBERS,
+    reviewer_committee: row?.reviewer_committee ?? DEFAULT_REVIEWERS,
+    pdf_url: row?.pdf_url || '',
   }));
-  const [paperSearch, setPaperSearch] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
-  const togglePaper = (id) => {
-    setF((s) => ({
-      ...s,
-      paperIds: s.paperIds.includes(id)
-        ? s.paperIds.filter((x) => x !== id)
-        : [...s.paperIds, id],
-    }));
-  };
-
-  const filteredPapers = useMemo(() => {
-    const q = paperSearch.trim().toLowerCase();
-    if (!q) return data.papers;
-    return data.papers.filter((p) => {
-      const matchTitle = (p.title || '').toLowerCase().includes(q);
-      const matchCat = (p.category_slug || '').toLowerCase().includes(q);
-      const matchInst = (p.institution || '').toLowerCase().includes(q);
-      return matchTitle || matchCat || matchInst;
-    });
-  }, [data.papers, paperSearch]);
 
   async function submit(e) {
     e.preventDefault();
@@ -539,76 +601,101 @@ function VolumeForm({ row, data, onSave, onClose }) {
             <input id="v-iss" className="input" type="number" min="1" value={f.issue_no} onChange={(e) => set('issue_no', e.target.value)} />
           </F>
         </div>
-        <div className="full">
+
+        {/* Upload Open PDF */}
+        <div className="full" style={{ marginBottom: '14px' }}>
+          <PdfUpload
+            id="v-pdf"
+            label="Upload Journal Issue PDF (Open Full Manuscript PDF)"
+            value={f.pdf_url}
+            onChange={(url) => set('pdf_url', url)}
+          />
+        </div>
+
+        {/* Custom Cover Image */}
+        <div className="full" style={{ marginBottom: '14px' }}>
           <CoverUpload id="v-cover" label="Custom Cover Image (optional, auto-compressed)" value={f.cover_url} onChange={(u) => set('cover_url', u)} />
         </div>
-        <F id="v-style" label="Procedural Art Style">
-          <select id="v-style" className="select" value={f.art_style} onChange={(e) => set('art_style', +e.target.value)}>
-            {STYLES.map((s, i) => <option key={s} value={i}>{s}</option>)}
-          </select>
-        </F>
-        <F id="v-theme" label="Cover Theme Colour">
-          <select id="v-theme" className="select" value={f.art_theme} onChange={(e) => set('art_theme', +e.target.value)}>
-            {THEMES.map((s, i) => <option key={s} value={i}>{s}</option>)}
-          </select>
-        </F>
-        <F id="v-desc" label="Description / Editorial Note" full>
-          <textarea id="v-desc" className="input" rows={3} value={f.description} onChange={(e) => set('description', e.target.value)} placeholder="Summary of this issue's focus and theme..." />
-        </F>
 
-        {/* Paper Selection with Live Search */}
-        <div className="full field" style={{ marginTop: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <label style={{ margin: 0, fontWeight: 700 }}>
-              Select Papers in which it should be shown ({f.paperIds.length} selected)
-            </label>
-            {f.paperIds.length > 0 ? (
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => set('paperIds', [])} style={{ padding: '3px 8px', fontSize: '0.78rem' }}>
-                Clear Selected
-              </button>
-            ) : null}
-          </div>
-          <p className="hint" style={{ marginBottom: '10px' }}>
-            Search and select the papers that will appear inside this volume book.
+        {/* Governance & Editorial Sections */}
+        <div className="full" style={{ marginTop: '10px' }}>
+          <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.15rem', color: 'var(--ink)', margin: '0 0 4px', borderBottom: '2px solid var(--o2)', paddingBottom: '6px' }}>
+            Governance &amp; Editorial Information
+          </h3>
+          <p className="hint" style={{ marginBottom: '16px' }}>
+            Enter the patrons, advisory board, editorial board, and reviewer committee for this issue. Examples are pre-filled below.
           </p>
-
-          <div className="search-box small" style={{ marginBottom: '12px' }}>
-            <Icon name="search" size={16} />
-            <input
-              type="search"
-              placeholder="Search papers by title, category, institution..."
-              value={paperSearch}
-              onChange={(e) => setPaperSearch(e.target.value)}
-            />
-            {paperSearch ? (
-              <button type="button" className="icon-btn" onClick={() => setPaperSearch('')} style={{ width: 24, height: 24 }}>
-                <Icon name="x" size={14} />
-              </button>
-            ) : null}
-          </div>
-
-          <div className="pickbox scroll" style={{ maxHeight: '240px', border: '1px solid var(--line)', borderRadius: 'var(--r)', padding: '8px', overflowY: 'auto' }}>
-            {filteredPapers.map((p) => {
-              const pos = f.paperIds.indexOf(p.id);
-              const isChecked = pos >= 0;
-              return (
-                <label key={p.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 4px', borderBottom: '1px solid var(--line)', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={isChecked} onChange={() => togglePaper(p.id)} style={{ marginTop: '4px' }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--ink)' }}>{p.title}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--mut)', display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '2px' }}>
-                      <span className="chip" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>{p.category_slug}</span>
-                      <span>{fmt(p.published_on)}</span>
-                      {p.institution ? <span>· {p.institution}</span> : null}
-                    </div>
-                  </div>
-                  {isChecked ? <span className="ord" style={{ alignSelf: 'center' }}>#{pos + 1}</span> : null}
-                </label>
-              );
-            })}
-            {!filteredPapers.length ? <div className="muted" style={{ padding: '12px', textAlign: 'center' }}>No papers found matching “{paperSearch}”.</div> : null}
-          </div>
         </div>
+
+        <F id="v-patrons" label="PATRONS" full hint="President, Vice President, Hon. Secretary, Treasurer, Directors">
+          <textarea
+            id="v-patrons"
+            className="input"
+            rows={5}
+            value={f.patrons}
+            onChange={(e) => set('patrons', e.target.value)}
+            placeholder="e.g. CA Anil Ganu&#10;President, Parle Tilak Vidyalaya Association..."
+          />
+        </F>
+
+        <F id="v-advisory" label="ADVISORY BOARD" full hint="Vice Chancellors, Directors, Deans">
+          <textarea
+            id="v-advisory"
+            className="input"
+            rows={5}
+            value={f.advisory_board}
+            onChange={(e) => set('advisory_board', e.target.value)}
+            placeholder="e.g. Prof. Dr. D. T. Shirke&#10;Vice Chancellor, Warana University..."
+          />
+        </F>
+
+        <div className="full" style={{ background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: '8px', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '14px', margin: '4px 0 14px' }}>
+          <h4 style={{ fontFamily: 'var(--serif)', fontSize: '1.05rem', margin: 0, color: 'var(--ink)' }}>
+            EDITORIAL BOARD
+          </h4>
+
+          <F id="v-editor-chief" label="EDITOR-IN-CHIEF" full>
+            <input
+              id="v-editor-chief"
+              className="input"
+              value={f.editor_in_chief}
+              onChange={(e) => set('editor_in_chief', e.target.value)}
+              placeholder="e.g. Prof. Dr. Minal Mapuskar — Principal, Mulund College of Commerce (Autonomous)"
+            />
+          </F>
+
+          <F id="v-managing-editor" label="MANAGING EDITOR" full>
+            <input
+              id="v-managing-editor"
+              className="input"
+              value={f.managing_editor}
+              onChange={(e) => set('managing_editor', e.target.value)}
+              placeholder="e.g. Dr. Rajashri Deshpande — Chairperson, Research Assessment, Promotion & Ethics Committee"
+            />
+          </F>
+
+          <F id="v-members" label="MEMBERS" full hint="Department Heads, Professors, Faculty">
+            <textarea
+              id="v-members"
+              className="input"
+              rows={6}
+              value={f.members}
+              onChange={(e) => set('members', e.target.value)}
+              placeholder="e.g. Prof. Dr. Kedar Marulkar&#10;Head, Department of Commerce, Shivaji University..."
+            />
+          </F>
+        </div>
+
+        <F id="v-reviewers" label="REVIEWER COMMITTEE" full hint="Reviewers and committee heads">
+          <textarea
+            id="v-reviewers"
+            className="input"
+            rows={4}
+            value={f.reviewer_committee}
+            onChange={(e) => set('reviewer_committee', e.target.value)}
+            placeholder="e.g. CMA Dr. Kinnery Thakkar&#10;Head, Department of Commerce, University of Mumbai..."
+          />
+        </F>
       </div>
       <FormFoot busy={busy} err={err} onClose={onClose} label={row ? 'Save Volume' : 'Create Volume'} />
     </form>
@@ -716,7 +803,7 @@ export default function AdminApp({ data }) {
                   <th>Volume &amp; Issue</th>
                   <th>Academic Year</th>
                   <th>Period</th>
-                  <th>Papers Included</th>
+                  <th>Issue PDF</th>
                   <th>Status</th>
                   <th />
                 </tr>
@@ -729,12 +816,18 @@ export default function AdminApp({ data }) {
                       <td><Thumb url={v.cover_url} /></td>
                       <td className="ttl">
                         {v.name}
-                        {v.description ? <span className="sub">{v.description.slice(0, 70)}…</span> : null}
+                        {v.description_text ? <span className="sub">{v.description_text.slice(0, 70)}…</span> : null}
                       </td>
                       <td><strong>{v.year_label}</strong></td>
                       <td>{v.period_label || '—'}</td>
                       <td>
-                        <span className="pill ok">{(v.paperIds || []).length} papers</span>
+                        {v.pdf_url ? (
+                          <a href={v.pdf_url} target="_blank" rel="noopener noreferrer" className="pill ok" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <Icon name="file" size={13} /> Open PDF ↗
+                          </a>
+                        ) : (
+                          <span className="pill warn">No PDF</span>
+                        )}
                       </td>
                       <td>
                         <span className={`pill ${v.published !== false ? 'ok' : 'warn'}`}>

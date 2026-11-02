@@ -979,6 +979,22 @@ noscript .reveal{opacity:1}
 .book-reader-right-head h3{font-family:var(--serif);font-size:1.4rem;font-weight:700;margin:0}
 .book-reader-paper-search{width:min(280px,100%)}
 
+/* Journal Library Tabs & Board Cards */
+.book-reader-tabs{display:flex;gap:8px;border-bottom:2px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.book-reader-tab-btn{background:none;border:none;padding:10px 16px;font-family:var(--sans);font-size:.92rem;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.book-reader-tab-btn:hover{color:var(--o)}
+.book-reader-tab-btn.active{color:var(--o);border-bottom-color:var(--o)}
+.book-reader-pdf-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:var(--o1);border:1px solid var(--o2);border-radius:6px}
+.vol-boards-wrap{display:flex;flex-direction:column;gap:22px}
+.vol-board-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px 22px}
+.vol-board-title{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--ink);margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid var(--o2)}
+.vol-board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.vol-person-item{background:#FAFAFA;border:1px solid var(--line);border-radius:6px;padding:12px 14px;transition:all .2s}
+.vol-person-item:hover{border-color:var(--o2);background:#FFFDF9}
+.vol-person-name{font-weight:700;font-size:.92rem;color:var(--ink);margin-bottom:3px}
+.vol-person-role{font-size:.82rem;color:var(--mut);line-height:1.45}
+.vol-key-person-box{background:linear-gradient(135deg,var(--o1),#fff);border:1px solid var(--o2);border-left:4px solid var(--o);border-radius:8px;padding:14px 18px;margin-bottom:12px}
+
 .book-papers-list{display:flex;flex-direction:column;gap:16px}
 .book-paper-row-item{
   border:1px solid var(--line);

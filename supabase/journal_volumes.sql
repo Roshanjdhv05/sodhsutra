@@ -19,6 +19,7 @@ create table if not exists public.journal_volumes (
   volume_no     int         not null default 1,              -- volume number
   issue_no      int         not null default 1,              -- issue number
   cover_url     text,                                        -- cover image url
+  pdf_url       text,                                        -- open full issue pdf url
   art_style     int         not null default 0,              -- generative art style (0-7)
   art_theme     int         not null default 0,              -- generative art theme (0-5)
   art_seed      int         not null default 1,              -- seed for procedural cover

@@ -6,11 +6,31 @@ import { Icon } from './Icon';
 import { CoverArt } from './ui';
 import { makeHelpers } from '@/lib/helpers';
 
+function parsePeopleList(text) {
+  if (!text) return [];
+  const blocks = text.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  return blocks.map((block) => {
+    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 1 && lines[0].includes(' — ')) {
+      const [name, ...rest] = lines[0].split(' — ');
+      return { name: name.trim(), role: rest.join(' — ').trim() };
+    }
+    if (lines.length === 1 && lines[0].includes(' - ')) {
+      const [name, ...rest] = lines[0].split(' - ');
+      return { name: name.trim(), role: rest.join(' - ').trim() };
+    }
+    const name = lines[0] || '';
+    const role = lines.slice(1).join(', ') || '';
+    return { name, role };
+  });
+}
+
 export default function JournalLibrary({ data }) {
   const searchParams = useSearchParams();
   const h = useMemo(() => makeHelpers(data), [data]);
   const [selectedYear, setSelectedYear] = useState('all');
   const [activeVolume, setActiveVolume] = useState(null);
+  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf' | 'boards' | 'papers'
   const [paperQuery, setPaperQuery] = useState('');
 
   // Extract all distinct academic years from volumes
@@ -62,6 +82,7 @@ export default function JournalLibrary({ data }) {
 
   const openBook = (vol) => {
     setActiveVolume(vol);
+    setActiveTab(vol.pdfUrl ? 'pdf' : (vol.patrons ? 'boards' : 'papers'));
     setPaperQuery('');
     if (typeof window !== 'undefined') {
       const u = new URL(window.location.href);
@@ -344,111 +365,303 @@ export default function JournalLibrary({ data }) {
                     <dd>Double-Blind Verified</dd>
                   </div>
                 </dl>
+
+                {activeVolume.pdfUrl ? (
+                  <a
+                    href={activeVolume.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                    style={{ width: '100%', justifyContent: 'center', marginTop: '16px', gap: '8px', fontSize: '0.92rem' }}
+                  >
+                    <Icon name="file" size={16} /> Open Complete PDF ↗
+                  </a>
+                ) : null}
               </aside>
 
               {/* Right Page */}
               <section className="book-reader-right">
-                <div className="book-reader-right-head">
-                  <div>
-                    <h3>Included Research Papers</h3>
-                    <p className="muted" style={{ margin: 0, fontSize: '0.86rem' }}>
-                      Showing {volumePapers.length} {volumePapers.length === 1 ? 'paper' : 'papers'} in this volume
-                    </p>
-                  </div>
-                  <div className="search-box small book-reader-paper-search">
-                    <Icon name="search" size={16} />
-                    <input
-                      type="search"
-                      placeholder="Filter papers in this volume…"
-                      value={paperQuery}
-                      onChange={(e) => setPaperQuery(e.target.value)}
-                    />
-                    {paperQuery && (
-                      <button
-                        type="button"
-                        className="icon-btn"
-                        onClick={() => setPaperQuery('')}
-                        style={{ width: 22, height: 22 }}
-                      >
-                        <Icon name="x" size={14} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="book-papers-list">
-                  {volumePapers.map((paper, idx) => {
-                    const cat = h.cat(paper.cat);
-                    return (
-                      <article key={paper.id} className="book-paper-row-item">
-                        <div className="book-paper-row-top">
-                          <span className="chip">{cat.short || cat.name}</span>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--mut)' }}>
-                            Article #{idx + 1} · {h.fmt(paper.date)}
-                          </span>
-                        </div>
-                        <h4 className="book-paper-row-title">
-                          <Link href={`/journals/${paper.slug}`}>
-                            {paper.title}
-                          </Link>
-                        </h4>
-                        <p className="book-paper-row-authors">
-                          <Icon name="user" size={14} style={{ verticalAlign: '-2px', marginRight: '4px' }} />
-                          {h.authorNames(paper)}
-                          {paper.inst ? ` · ${paper.inst}` : ''}
-                        </p>
-                        <p className="book-paper-row-abstract">
-                          {paper.abstract}
-                        </p>
-                        <div className="book-paper-row-actions">
-                          <Link href={`/journals/${paper.slug}`} className="btn btn-primary btn-sm">
-                            <Icon name="book" size={15} /> Read Full Paper
-                          </Link>
-                          {paper.paperUrl && (
-                            <a
-                              href={paper.paperUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-ghost btn-sm"
-                            >
-                              <Icon name="link" size={15} /> Open Manuscript ↗
-                            </a>
-                          )}
-                          {paper.doi && (
-                            <a
-                              href={`https://doi.org/${paper.doi}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="read-link"
-                              style={{ fontSize: '0.82rem' }}
-                            >
-                              DOI: {paper.doi}
-                            </a>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })}
-
-                  {!volumePapers.length && (
-                    <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-                      <p className="muted">
-                        {paperQuery
-                          ? `No papers found matching “${paperQuery}” in this volume.`
-                          : 'No research papers have been assigned to this volume yet.'}
-                      </p>
-                      {paperQuery && (
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => setPaperQuery('')}
-                        >
-                          Clear Search
-                        </button>
-                      )}
-                    </div>
+                <div className="book-reader-tabs">
+                  <button
+                    type="button"
+                    className={`book-reader-tab-btn ${activeTab === 'pdf' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('pdf')}
+                  >
+                    <Icon name="file" size={16} /> Original Manuscript (PDF)
+                  </button>
+                  <button
+                    type="button"
+                    className={`book-reader-tab-btn ${activeTab === 'boards' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('boards')}
+                  >
+                    <Icon name="user" size={16} /> Governance &amp; Editorial Boards
+                  </button>
+                  {volumePapers.length > 0 && (
+                    <button
+                      type="button"
+                      className={`book-reader-tab-btn ${activeTab === 'papers' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('papers')}
+                    >
+                      <Icon name="book" size={16} /> Articles ({volumePapers.length})
+                    </button>
                   )}
                 </div>
+
+                {/* Tab 1: PDF Viewer */}
+                {activeTab === 'pdf' && (
+                  <div className="book-reader-pdf-tab">
+                    {activeVolume.pdfUrl ? (
+                      <>
+                        <div className="book-reader-pdf-toolbar">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="pill ok" style={{ fontSize: '0.78rem' }}>Full Issue PDF</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--mut)', fontWeight: 600 }}>{activeVolume.name}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <a href={activeVolume.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+                              <Icon name="link" size={14} /> Open in New Tab ↗
+                            </a>
+                            <a href={activeVolume.pdfUrl} download className="btn btn-primary btn-sm">
+                              <Icon name="file" size={14} /> Download PDF
+                            </a>
+                          </div>
+                        </div>
+                        <div style={{ height: '700px', marginTop: '14px', border: '1px solid var(--line)', borderRadius: '8px', overflow: 'hidden', background: '#525659' }}>
+                          <iframe
+                            src={`${activeVolume.pdfUrl}#toolbar=1&navpanes=1`}
+                            title={`${activeVolume.name} PDF`}
+                            style={{ width: '100%', height: '100%', border: 'none' }}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg)', borderRadius: '8px', border: '1px dashed var(--line)' }}>
+                        <Icon name="file" size={40} style={{ color: 'var(--mut)', marginBottom: '12px' }} />
+                        <h4 style={{ margin: '0 0 8px', fontFamily: 'var(--serif)' }}>Issue PDF In Preparation</h4>
+                        <p className="muted" style={{ margin: '0 0 16px', fontSize: '0.9rem', maxWidth: '44ch', marginLeft: 'auto', marginRight: 'auto' }}>
+                          The complete manuscript PDF for this issue is being compiled. You can view the Editorial &amp; Governance Boards below.
+                        </p>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveTab('boards')}>
+                          View Editorial Boards →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab 2: Governance & Editorial Boards */}
+                {activeTab === 'boards' && (() => {
+                  const patronsList = parsePeopleList(activeVolume.patrons);
+                  const advisoryList = parsePeopleList(activeVolume.advisoryBoard);
+                  const membersList = parsePeopleList(activeVolume.editorialMembers);
+                  const reviewerList = parsePeopleList(activeVolume.reviewerCommittee);
+                  return (
+                    <div className="vol-boards-wrap">
+                      {/* Patrons */}
+                      {patronsList.length > 0 && (
+                        <div className="vol-board-card">
+                          <h3 className="vol-board-title">PATRONS</h3>
+                          <div className="vol-board-grid">
+                            {patronsList.map((p, idx) => (
+                              <div key={idx} className="vol-person-item">
+                                <div className="vol-person-name">{p.name}</div>
+                                {p.role && <div className="vol-person-role">{p.role}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Advisory Board */}
+                      {advisoryList.length > 0 && (
+                        <div className="vol-board-card">
+                          <h3 className="vol-board-title">ADVISORY BOARD</h3>
+                          <div className="vol-board-grid">
+                            {advisoryList.map((p, idx) => (
+                              <div key={idx} className="vol-person-item">
+                                <div className="vol-person-name">{p.name}</div>
+                                {p.role && <div className="vol-person-role">{p.role}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Editorial Board */}
+                      <div className="vol-board-card">
+                        <h3 className="vol-board-title">EDITORIAL BOARD</h3>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+                          {activeVolume.editorInChief && (
+                            <div className="vol-key-person-box">
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--o)' }}>
+                                EDITOR-IN-CHIEF
+                              </span>
+                              <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', marginTop: '4px' }}>
+                                {activeVolume.editorInChief.split('\n')[0]}
+                              </div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--mut)', marginTop: '2px' }}>
+                                {activeVolume.editorInChief.split('\n').slice(1).join(', ')}
+                              </div>
+                            </div>
+                          )}
+
+                          {activeVolume.managingEditor && (
+                            <div className="vol-key-person-box">
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--o)' }}>
+                                MANAGING EDITOR
+                              </span>
+                              <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', marginTop: '4px' }}>
+                                {activeVolume.managingEditor.split('\n')[0]}
+                              </div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--mut)', marginTop: '2px' }}>
+                                {activeVolume.managingEditor.split('\n').slice(1).join(', ')}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {membersList.length > 0 && (
+                          <div>
+                            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--ink)', margin: '14px 0 10px', letterSpacing: '0.04em' }}>
+                              EDITORIAL BOARD MEMBERS
+                            </h4>
+                            <div className="vol-board-grid">
+                              {membersList.map((p, idx) => (
+                                <div key={idx} className="vol-person-item">
+                                  <div className="vol-person-name">{p.name}</div>
+                                  {p.role && <div className="vol-person-role">{p.role}</div>}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Reviewer Committee */}
+                      {reviewerList.length > 0 && (
+                        <div className="vol-board-card">
+                          <h3 className="vol-board-title">REVIEWER COMMITTEE</h3>
+                          <div className="vol-board-grid">
+                            {reviewerList.map((p, idx) => (
+                              <div key={idx} className="vol-person-item">
+                                <div className="vol-person-name">{p.name}</div>
+                                {p.role && <div className="vol-person-role">{p.role}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Tab 3: Included Articles */}
+                {activeTab === 'papers' && (
+                  <div>
+                    <div className="book-reader-right-head">
+                      <div>
+                        <h3>Included Research Papers</h3>
+                        <p className="muted" style={{ margin: 0, fontSize: '0.86rem' }}>
+                          Showing {volumePapers.length} {volumePapers.length === 1 ? 'paper' : 'papers'} in this volume
+                        </p>
+                      </div>
+                      <div className="search-box small book-reader-paper-search">
+                        <Icon name="search" size={16} />
+                        <input
+                          type="search"
+                          placeholder="Filter papers in this volume…"
+                          value={paperQuery}
+                          onChange={(e) => setPaperQuery(e.target.value)}
+                        />
+                        {paperQuery && (
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            onClick={() => setPaperQuery('')}
+                            style={{ width: 22, height: 22 }}
+                          >
+                            <Icon name="x" size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="book-papers-list">
+                      {volumePapers.map((paper, idx) => {
+                        const cat = h.cat(paper.cat);
+                        return (
+                          <article key={paper.id} className="book-paper-row-item">
+                            <div className="book-paper-row-top">
+                              <span className="chip">{cat.short || cat.name}</span>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--mut)' }}>
+                                Article #{idx + 1} · {h.fmt(paper.date)}
+                              </span>
+                            </div>
+                            <h4 className="book-paper-row-title">
+                              <Link href={`/journals/${paper.slug}`}>
+                                {paper.title}
+                              </Link>
+                            </h4>
+                            <p className="book-paper-row-authors">
+                              <Icon name="user" size={14} style={{ verticalAlign: '-2px', marginRight: '4px' }} />
+                              {h.authorNames(paper)}
+                              {paper.inst ? ` · ${paper.inst}` : ''}
+                            </p>
+                            <p className="book-paper-row-abstract">
+                              {paper.abstract}
+                            </p>
+                            <div className="book-paper-row-actions">
+                              <Link href={`/journals/${paper.slug}`} className="btn btn-primary btn-sm">
+                                <Icon name="book" size={15} /> Read Full Paper
+                              </Link>
+                              {paper.paperUrl && (
+                                <a
+                                  href={paper.paperUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-ghost btn-sm"
+                                >
+                                  <Icon name="link" size={15} /> Open Manuscript ↗
+                                </a>
+                              )}
+                              {paper.doi && (
+                                <a
+                                  href={`https://doi.org/${paper.doi}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="read-link"
+                                  style={{ fontSize: '0.82rem' }}
+                                >
+                                  DOI: {paper.doi}
+                                </a>
+                              )}
+                            </div>
+                          </article>
+                        );
+                      })}
+
+                      {!volumePapers.length && (
+                        <div style={{ textAlign: 'center', padding: '48px 16px' }}>
+                          <p className="muted">
+                            {paperQuery
+                              ? `No papers found matching “${paperQuery}” in this volume.`
+                              : 'No research papers have been assigned to this volume yet.'}
+                          </p>
+                          {paperQuery && (
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => setPaperQuery('')}
+                            >
+                              Clear Search
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </section>
             </div>
           </div>
