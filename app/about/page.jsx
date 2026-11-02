@@ -1,15 +1,67 @@
 import Link from 'next/link';
-import StaticPage, { Ph } from '@/components/StaticPage';
+import StaticPage from '@/components/StaticPage';
 
-export const metadata = { title: 'About', alternates: { canonical: 'https://shodhsutra.com/about' } };
+export const metadata = {
+  title: 'About ShodhSutra',
+  description: 'A Multi Disciplinary Research Journal initiated to create a platform for young researchers, faculty, and scholars to showcase their research skills.',
+  alternates: { canonical: 'https://shodhsutra.com/about' },
+};
 
 export default function About() {
   return (
-    <StaticPage eyebrow="About" title="About ShodhSutra" intro="A multidisciplinary research journal platform for students, teachers and independent researchers." crumb="About" secs={[
-      { id: 'purpose', title: 'Our purpose', body: <><p>ShodhSutra helps students, teachers and independent researchers share work across disciplines and be read by a wider audience.</p><p>Some papers, authors and news items on this site are fictional demonstration content and are labelled as such.</p></> },
-      { id: 'standards', title: 'Editorial standards', body: <><p>Standards for review, authorship and ethics are still being defined. <Ph /></p><p>ShodhSutra makes no claim of indexing, accreditation, impact factor or established peer-review arrangements.</p></> },
-      { id: 'how', title: 'How it works', body: <ol><li>Authors submit a paper link and metadata.</li><li>Editors check scope and policy compliance.</li><li>Eligible work is reviewed under a process to be announced.</li><li>Accepted work is published with its own page and citation details.</li></ol> },
-      { id: 'team', title: 'Team and contact', body: <p>Editorial team details to be added. <Ph /> See the <Link href="/contact">contact page</Link>.</p> },
-    ]} />
+    <StaticPage
+      eyebrow="About"
+      title="About ShodhSutra"
+      intro="A Multi Disciplinary Research Journal initiated to create a platform for young researchers, faculty, and learners to showcase their research skills."
+      crumb="About"
+      secs={[
+        {
+          id: 'overview',
+          title: 'Overview & Mission',
+          body: (
+            <>
+              <p>
+                A Multi Disciplinary Research Journal is initiated to create a platform for young researchers. The journal will have quarterly publication that supports faculty &amp; learners to showcase their research skills.
+              </p>
+              <p>
+                Shodh Sutra is a journal providing a common platform for the exchange of knowledge, experiences, and research findings. It welcomes original research papers, review articles, case studies, conceptual papers, and interdisciplinary studies that contribute to the advancement of knowledge and society.
+              </p>
+            </>
+          ),
+        },
+        {
+          id: 'scope',
+          title: 'Multidisciplinary Scope & Academic Areas',
+          body: (
+            <>
+              <p>
+                It is an academic platform that provides opportunities for researchers, academicians, scholars, students, and professionals from different fields of study to publish and share their original research, innovative ideas, and scholarly contributions. It encourages the integration of knowledge from various disciplines to address complex issues and develop innovative solutions to contemporary challenges.
+              </p>
+              <p>
+                It promotes research, innovation, and intellectual collaboration across diverse academic areas, including Science, Technology, Engineering, Arts, Humanities, Social Sciences, Commerce, Management, Education, Agriculture, and other emerging fields.
+              </p>
+            </>
+          ),
+        },
+        {
+          id: 'quality',
+          title: 'Academic Quality & Peer Review',
+          body: (
+            <p>
+              It emphasizes academic quality, originality, research ethics, transparency, and a rigorous peer-review process to ensure the credibility and relevance of published work.
+            </p>
+          ),
+        },
+        {
+          id: 'submissions',
+          title: 'Submissions & Inquiries',
+          body: (
+            <p>
+              We welcome submissions from researchers, academicians, and students. Please consult our <Link href="/submission-guidelines" style={{ color: 'var(--o)', fontWeight: 600 }}>Submission Guidelines</Link> and upload your manuscript via the <Link href="/submit" style={{ color: 'var(--o)', fontWeight: 600 }}>Paper Submission Form</Link>. For editorial inquiries, reach out through our <Link href="/contact" style={{ color: 'var(--o)', fontWeight: 600 }}>Contact Page</Link>.
+            </p>
+          ),
+        },
+      ]}
+    />
   );
 }
