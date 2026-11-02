@@ -26,119 +26,191 @@ export default async function SubmitPage() {
           {/* Intro */}
           <section className="submit-section">
             <p className="submit-intro-text">
-              Researchers, academicians, students, and independent scholars are invited to submit their work for editorial consideration. Please complete the submission form with accurate author information and upload your manuscript in PDF format. Ensure that your paper follows the recommended structure and includes appropriate citations and references.
+              Researchers, academicians, students, and independent scholars are invited to submit their work for editorial consideration. Please review the author guidelines, manuscript structure, and formatting checklist below before submitting your paper.
             </p>
           </section>
 
-          {/* Submission Guidelines */}
+          {/* 1. General Guidelines for Authors */}
           <section className="submit-section">
-            <h2 className="submit-h2">Submission Guidelines</h2>
+            <h2 className="submit-h2">1. General Guidelines for Authors</h2>
             <div className="submit-guidelines-list">
               <div className="submit-guideline-item">
                 <span className="submit-guideline-num">1</span>
                 <div>
-                  <h3 className="submit-guideline-title">Paper Title</h3>
-                  <p>Provide a clear, concise, and descriptive title that accurately reflects the subject and scope of your research.</p>
+                  <p>The manuscript must be original, academically sound, and relevant to the journal&apos;s aims and scope.</p>
                 </div>
               </div>
               <div className="submit-guideline-item">
                 <span className="submit-guideline-num">2</span>
                 <div>
-                  <h3 className="submit-guideline-title">Abstract <span className="submit-range">(50–300 words)</span></h3>
-                  <p>Write a brief summary of your research, including its purpose, objectives, methodology, key findings, and conclusions. The abstract should allow readers to understand the significance of your work without reading the entire paper.</p>
+                  <p>The manuscript must not have been published previously in substantially the same form.</p>
                 </div>
               </div>
               <div className="submit-guideline-item">
                 <span className="submit-guideline-num">3</span>
                 <div>
-                  <h3 className="submit-guideline-title">Author Information</h3>
-                  <p>Enter the corresponding author's full name and active email address. Add the names of all co-authors in the order they should appear in the publication. Provide the institution, university, organization, or independent affiliation associated with the research.</p>
+                  <p>The manuscript must not be under consideration by another journal at the same time, unless the journal&apos;s policy explicitly permits an exception.</p>
                 </div>
               </div>
               <div className="submit-guideline-item">
                 <span className="submit-guideline-num">4</span>
                 <div>
-                  <h3 className="submit-guideline-title">Research Theme &amp; Manuscript Category</h3>
-                  <p>Select the manuscript category (e.g. Original Research Articles, Review Articles, Case Studies, etc.) and research theme that best represent your paper's format and primary subject area.</p>
+                  <p>Authors must ensure that the research is based on reliable sources, appropriate methodology, and valid analysis.</p>
                 </div>
               </div>
               <div className="submit-guideline-item">
                 <span className="submit-guideline-num">5</span>
                 <div>
-                  <h3 className="submit-guideline-title">Keywords <span className="submit-range">(3–8 keywords)</span></h3>
-                  <p>Provide three to eight relevant keywords, separated by commas. Choose specific terms that represent the main concepts, methods, and subject areas of your research.</p>
+                  <p>All authors must have made a genuine scholarly contribution to the research and must approve the final manuscript.</p>
                 </div>
               </div>
               <div className="submit-guideline-item">
                 <span className="submit-guideline-num">6</span>
                 <div>
-                  <h3 className="submit-guideline-title">Manuscript Upload</h3>
-                  <p>Upload your complete research paper in PDF format. Before submitting, ensure that the document contains all relevant sections, tables, figures, citations, and references, as applicable.</p>
+                  <p>The manuscript must be written in clear, grammatically correct academic language.</p>
+                </div>
+              </div>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">7</span>
+                <div>
+                  <p>Authors must follow the journal&apos;s prescribed template, reference style, word limit, and submission requirements.</p>
+                </div>
+              </div>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">8</span>
+                <div>
+                  <p>All sources, including text, ideas, data, figures, tables, and other materials obtained from third parties, must be properly acknowledged.</p>
+                </div>
+              </div>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">9</span>
+                <div>
+                  <p>Authors must disclose relevant conflicts of interest, funding sources, and any required ethical approvals.</p>
+                </div>
+              </div>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">10</span>
+                <div>
+                  <p>Submission does not guarantee acceptance or publication. All manuscripts are subject to editorial screening and the journal&apos;s peer-review process.</p>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Recommended Paper Structure */}
+          {/* 2. Manuscript Structure and Formatting */}
           <section className="submit-section">
-            <h2 className="submit-h2">Recommended Paper Structure</h2>
-            <p className="submit-body-text">For consistency and ease of review, your manuscript should generally include the following sections, where applicable:</p>
-            <ol className="submit-structure-list">
-              <li><strong>Abstract:</strong> Summarizes the research objectives, methodology, findings, and conclusions.</li>
-              <li><strong>Introduction:</strong> Establishes the research background, problem statement, objectives, and significance.</li>
-              <li><strong>Scope and Approach:</strong> Explains the scope of the study, research questions, methods, and approach.</li>
-              <li><strong>Literature Review:</strong> Discusses relevant previous research and identifies gaps the current study addresses.</li>
-              <li><strong>Discussion:</strong> Interprets the findings, explains their implications, and compares them with existing research.</li>
-              <li><strong>Conclusion:</strong> Summarizes the main findings, contributions, limitations, and possible directions for future research.</li>
-              <li><strong>References:</strong> Lists all sources cited in the manuscript using a consistent referencing style.</li>
-            </ol>
-            <p className="submit-body-text submit-note">Additional sections, such as methodology, results, acknowledgements, funding disclosures, or conflict-of-interest statements, may be included when relevant to the nature of the research.</p>
-          </section>
-
-          {/* After Submission */}
-          <section className="submit-section">
-            <h2 className="submit-h2">What Happens After Submission?</h2>
-            <div className="submit-process-steps">
-              <div className="submit-process-step">
-                <span className="submit-process-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                </span>
+            <h2 className="submit-h2">2. Manuscript Structure and Formatting</h2>
+            <p className="submit-body-text">Authors should arrange the manuscript in the following order.</p>
+            <div className="submit-guidelines-list">
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">1</span>
                 <div>
-                  <h3>Confirmation</h3>
-                  <p>After you submit, your manuscript and submission details will be sent to the journal's designated editorial email address. You should receive a confirmation once the submission has been successfully received, if email confirmation is enabled.</p>
+                  <h3 className="submit-guideline-title">Title of the Paper</h3>
+                  <p>A concise, specific title that reflects the subject, research problem, and main focus of the study.</p>
                 </div>
               </div>
-              <div className="submit-process-step">
-                <span className="submit-process-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18 2 4 4-10 10H8v-4z"/></svg>
-                </span>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">2</span>
                 <div>
-                  <h3>Initial Assessment</h3>
-                  <p>The editorial team may conduct an initial assessment to check the manuscript's relevance, completeness, originality, and compliance with the submission guidelines. Papers that meet the initial requirements may proceed to further editorial evaluation or peer review, depending on the journal's review policy.</p>
+                  <h3 className="submit-guideline-title">Author Details</h3>
+                  <p>Full names, institutional affiliations, department, institution, country, and corresponding author&apos;s email address. Follow the journal&apos;s anonymization requirements.</p>
                 </div>
               </div>
-              <div className="submit-process-step">
-                <span className="submit-process-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>
-                </span>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">3</span>
                 <div>
-                  <h3>Follow-up</h3>
-                  <p>Authors may be contacted if additional information, corrections, or revisions are required. Submission does not guarantee acceptance or publication.</p>
+                  <h3 className="submit-guideline-title">Abstract and Keywords</h3>
+                  <p>Summarize the research problem, objective, methodology, principal results, and conclusion. Add the required number of keywords.</p>
+                </div>
+              </div>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">4</span>
+                <div>
+                  <h3 className="submit-guideline-title">Main Body of the Paper</h3>
+                  <p>Introduction, literature review, research gap, objectives or research questions, methodology, results, discussion, and conclusion, as applicable to the research design.</p>
+                </div>
+              </div>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">5</span>
+                <div>
+                  <h3 className="submit-guideline-title">Supporting Material</h3>
+                  <p>Tables, figures, diagrams, equations, appendices, supplementary datasets, and code where relevant.</p>
+                </div>
+              </div>
+              <div className="submit-guideline-item">
+                <span className="submit-guideline-num">6</span>
+                <div>
+                  <h3 className="submit-guideline-title">References and Declarations</h3>
+                  <p>Complete references and applicable statements on funding, conflicts of interest, ethics approval, author contributions, data availability, and acknowledgements.</p>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Important Notes */}
+          {/* Recommended Formatting Checklist */}
           <section className="submit-section">
-            <h2 className="submit-h2">Important Notes</h2>
-            <ul className="submit-notes-list">
-              <li>Submit original work that has been prepared in accordance with applicable research ethics and publication standards.</li>
-              <li>Ensure that all listed authors have approved the submission and that the corresponding author is authorized to communicate on their behalf.</li>
-              <li>Cite all external sources appropriately and disclose relevant conflicts of interest, funding, or ethical approvals where applicable.</li>
-              <li>Do not submit plagiarized work or research containing fabricated or falsified data.</li>
-              <li>Keep a copy of your manuscript and submission confirmation for your records.</li>
-            </ul>
+            <h2 className="submit-h2">Recommended Formatting Checklist</h2>
+            <p className="submit-body-text">The following values are illustrative defaults, not universal requirements.</p>
+            <div className="submit-checklist-wrap">
+              <table className="submit-checklist-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Element</th>
+                    <th scope="col">Suggested Default</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>File format</td>
+                    <td>.DOCX</td>
+                  </tr>
+                  <tr>
+                    <td>Page size</td>
+                    <td>A4</td>
+                  </tr>
+                  <tr>
+                    <td>Font</td>
+                    <td>Times New Roman</td>
+                  </tr>
+                  <tr>
+                    <td>Main text size</td>
+                    <td>12 pt</td>
+                  </tr>
+                  <tr>
+                    <td>Line spacing</td>
+                    <td>1.15</td>
+                  </tr>
+                  <tr>
+                    <td>Margins</td>
+                    <td>1 inch</td>
+                  </tr>
+                  <tr>
+                    <td>Abstract</td>
+                    <td>Approximately 150–250 words</td>
+                  </tr>
+                  <tr>
+                    <td>Keywords</td>
+                    <td>4–6</td>
+                  </tr>
+                  <tr>
+                    <td>Headings</td>
+                    <td>Consistent numbered</td>
+                  </tr>
+                  <tr>
+                    <td>Tables and figures</td>
+                    <td>Numbered, titled, readable, and cited in the text</td>
+                  </tr>
+                  <tr>
+                    <td>References</td>
+                    <td>One consistent prescribed style, such as APA or IEEE</td>
+                  </tr>
+                  <tr>
+                    <td>File naming</td>
+                    <td>Clear manuscript title</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </section>
 
           {/* CTA + Template */}
