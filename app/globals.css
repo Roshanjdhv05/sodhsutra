@@ -985,6 +985,7 @@ noscript .reveal{opacity:1}
 .book-reader-tab-btn:hover{color:var(--o)}
 .book-reader-tab-btn.active{color:var(--o);border-bottom-color:var(--o)}
 .book-reader-pdf-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:var(--o1);border:1px solid var(--o2);border-radius:6px}
+.book-reader-pdf-bar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;background:linear-gradient(135deg,var(--o1),#fff);border:1px solid var(--o2);border-left:4px solid var(--o);border-radius:8px;margin-bottom:20px}
 .vol-boards-wrap{display:flex;flex-direction:column;gap:22px}
 .vol-board-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px 22px}
 .vol-board-title{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--ink);margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid var(--o2)}

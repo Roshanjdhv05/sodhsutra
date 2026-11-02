@@ -30,7 +30,6 @@ export default function JournalLibrary({ data }) {
   const h = useMemo(() => makeHelpers(data), [data]);
   const [selectedYear, setSelectedYear] = useState('all');
   const [activeVolume, setActiveVolume] = useState(null);
-  const [activeTab, setActiveTab] = useState('pdf'); // 'pdf' | 'boards' | 'papers'
   const [paperQuery, setPaperQuery] = useState('');
 
   // Extract all distinct academic years from volumes
@@ -82,7 +81,6 @@ export default function JournalLibrary({ data }) {
 
   const openBook = (vol) => {
     setActiveVolume(vol);
-    setActiveTab(vol.pdfUrl ? 'pdf' : (vol.patrons ? 'boards' : 'papers'));
     setPaperQuery('');
     if (typeof window !== 'undefined') {
       const u = new URL(window.location.href);
@@ -367,90 +365,55 @@ export default function JournalLibrary({ data }) {
                 </dl>
 
                 {activeVolume.pdfUrl ? (
-                  <a
-                    href={activeVolume.pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-primary"
-                    style={{ width: '100%', justifyContent: 'center', marginTop: '16px', gap: '8px', fontSize: '0.92rem' }}
-                  >
-                    <Icon name="file" size={16} /> Open Complete PDF ↗
-                  </a>
+                  <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <a
+                      href={activeVolume.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-primary"
+                      style={{ width: '100%', justifyContent: 'center', gap: '8px', fontSize: '0.9rem' }}
+                    >
+                      <Icon name="link" size={15} /> Open Manuscript (PDF) ↗
+                    </a>
+                    <a
+                      href={activeVolume.pdfUrl}
+                      download
+                      className="btn btn-ghost"
+                      style={{ width: '100%', justifyContent: 'center', gap: '8px', fontSize: '0.88rem' }}
+                    >
+                      <Icon name="file" size={15} /> Download PDF ⤓
+                    </a>
+                  </div>
                 ) : null}
               </aside>
 
               {/* Right Page */}
               <section className="book-reader-right">
-                <div className="book-reader-tabs">
-                  <button
-                    type="button"
-                    className={`book-reader-tab-btn ${activeTab === 'pdf' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('pdf')}
-                  >
-                    <Icon name="file" size={16} /> Original Manuscript (PDF)
-                  </button>
-                  <button
-                    type="button"
-                    className={`book-reader-tab-btn ${activeTab === 'boards' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('boards')}
-                  >
-                    <Icon name="user" size={16} /> Governance &amp; Editorial Boards
-                  </button>
-                  {volumePapers.length > 0 && (
-                    <button
-                      type="button"
-                      className={`book-reader-tab-btn ${activeTab === 'papers' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('papers')}
-                    >
-                      <Icon name="book" size={16} /> Articles ({volumePapers.length})
-                    </button>
-                  )}
-                </div>
-
-                {/* Tab 1: PDF Viewer */}
-                {activeTab === 'pdf' && (
-                  <div className="book-reader-pdf-tab">
-                    {activeVolume.pdfUrl ? (
-                      <>
-                        <div className="book-reader-pdf-toolbar">
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span className="pill ok" style={{ fontSize: '0.78rem' }}>Full Issue PDF</span>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--mut)', fontWeight: 600 }}>{activeVolume.name}</span>
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <a href={activeVolume.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
-                              <Icon name="link" size={14} /> Open in New Tab ↗
-                            </a>
-                            <a href={activeVolume.pdfUrl} download className="btn btn-primary btn-sm">
-                              <Icon name="file" size={14} /> Download PDF
-                            </a>
-                          </div>
-                        </div>
-                        <div style={{ height: '700px', marginTop: '14px', border: '1px solid var(--line)', borderRadius: '8px', overflow: 'hidden', background: '#525659' }}>
-                          <iframe
-                            src={`${activeVolume.pdfUrl}#toolbar=1&navpanes=1`}
-                            title={`${activeVolume.name} PDF`}
-                            style={{ width: '100%', height: '100%', border: 'none' }}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg)', borderRadius: '8px', border: '1px dashed var(--line)' }}>
-                        <Icon name="file" size={40} style={{ color: 'var(--mut)', marginBottom: '12px' }} />
-                        <h4 style={{ margin: '0 0 8px', fontFamily: 'var(--serif)' }}>Issue PDF In Preparation</h4>
-                        <p className="muted" style={{ margin: '0 0 16px', fontSize: '0.9rem', maxWidth: '44ch', marginLeft: 'auto', marginRight: 'auto' }}>
-                          The complete manuscript PDF for this issue is being compiled. You can view the Editorial &amp; Governance Boards below.
-                        </p>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveTab('boards')}>
-                          View Editorial Boards →
-                        </button>
+                {/* PDF Link and Download Bar */}
+                {activeVolume.pdfUrl ? (
+                  <div className="book-reader-pdf-bar">
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                        <span className="pill ok" style={{ fontSize: '0.75rem' }}>Full Issue Manuscript</span>
+                        <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--ink)' }}>{activeVolume.name}</span>
                       </div>
-                    )}
+                      <div style={{ fontSize: '0.82rem', color: 'var(--mut)' }}>
+                        Official issue publication available to view or download.
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <a href={activeVolume.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">
+                        <Icon name="link" size={14} /> Open PDF ↗
+                      </a>
+                      <a href={activeVolume.pdfUrl} download className="btn btn-ghost btn-sm">
+                        <Icon name="file" size={14} /> Download PDF
+                      </a>
+                    </div>
                   </div>
-                )}
+                ) : null}
 
-                {/* Tab 2: Governance & Editorial Boards */}
-                {activeTab === 'boards' && (() => {
+                {/* Governance & Editorial Boards */}
+                {(() => {
                   const patronsList = parsePeopleList(activeVolume.patrons);
                   const advisoryList = parsePeopleList(activeVolume.advisoryBoard);
                   const membersList = parsePeopleList(activeVolume.editorialMembers);
@@ -524,7 +487,7 @@ export default function JournalLibrary({ data }) {
                         {membersList.length > 0 && (
                           <div>
                             <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--ink)', margin: '14px 0 10px', letterSpacing: '0.04em' }}>
-                              EDITORIAL BOARD MEMBERS
+                              MEMBERS
                             </h4>
                             <div className="vol-board-grid">
                               {membersList.map((p, idx) => (
@@ -556,34 +519,15 @@ export default function JournalLibrary({ data }) {
                   );
                 })()}
 
-                {/* Tab 3: Included Articles */}
-                {activeTab === 'papers' && (
-                  <div>
+                {/* Included Articles (if any) */}
+                {volumePapers.length > 0 && (
+                  <div style={{ marginTop: '28px', borderTop: '2px solid var(--line)', paddingTop: '20px' }}>
                     <div className="book-reader-right-head">
                       <div>
-                        <h3>Included Research Papers</h3>
+                        <h3>Articles in this Issue</h3>
                         <p className="muted" style={{ margin: 0, fontSize: '0.86rem' }}>
-                          Showing {volumePapers.length} {volumePapers.length === 1 ? 'paper' : 'papers'} in this volume
+                          Showing {volumePapers.length} {volumePapers.length === 1 ? 'paper' : 'papers'}
                         </p>
-                      </div>
-                      <div className="search-box small book-reader-paper-search">
-                        <Icon name="search" size={16} />
-                        <input
-                          type="search"
-                          placeholder="Filter papers in this volume…"
-                          value={paperQuery}
-                          onChange={(e) => setPaperQuery(e.target.value)}
-                        />
-                        {paperQuery && (
-                          <button
-                            type="button"
-                            className="icon-btn"
-                            onClick={() => setPaperQuery('')}
-                            style={{ width: 22, height: 22 }}
-                          >
-                            <Icon name="x" size={14} />
-                          </button>
-                        )}
                       </div>
                     </div>
 
@@ -640,25 +584,6 @@ export default function JournalLibrary({ data }) {
                           </article>
                         );
                       })}
-
-                      {!volumePapers.length && (
-                        <div style={{ textAlign: 'center', padding: '48px 16px' }}>
-                          <p className="muted">
-                            {paperQuery
-                              ? `No papers found matching “${paperQuery}” in this volume.`
-                              : 'No research papers have been assigned to this volume yet.'}
-                          </p>
-                          {paperQuery && (
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              onClick={() => setPaperQuery('')}
-                            >
-                              Clear Search
-                            </button>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
