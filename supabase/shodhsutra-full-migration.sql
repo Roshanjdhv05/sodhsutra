@@ -8,9 +8,11 @@
 --   1. Create a new Supabase project.
 --   2. Open SQL Editor → paste and run this entire file.
 --   3. Update your .env with the new SUPABASE_URL and keys.
---   4. The 'covers' storage bucket is created automatically by this script.
---   5. For manuscript PDF uploads (paper_url), create a 'pdfs' bucket manually
---      in Supabase dashboard → Storage → New bucket (set public as needed).
+--   4. Storage buckets 'covers' and 'papers' are automatically created in Section 4.
+--      If your Supabase project restricts direct SQL access to storage.buckets,
+--      create them in the Supabase Dashboard:
+--        • Storage → New bucket → Name: "covers", Public: ON, File size limit: 20 KB
+--        • Storage → New bucket → Name: "papers", Public: ON, File size limit: 20 MB
 --
 -- WHAT'S INCLUDED:
 --   Section 0  — Extensions
@@ -285,8 +287,9 @@ create policy "public read volume_papers"
   using (true);
 
 -- ============================================================================
--- 4. Storage — 'covers' bucket (public, hard cap 20 KB per file)
+-- 4. Storage Buckets ('covers' & 'papers')
 -- ============================================================================
+-- 1. 'covers' bucket (public, max 20 KB per image)
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('covers', 'covers', true, 20480, array['image/webp','image/jpeg','image/png'])
 on conflict (id) do update
@@ -294,6 +297,15 @@ on conflict (id) do update
       file_size_limit    = 20480,
       allowed_mime_types = array['image/webp','image/jpeg','image/png'];
 
+-- 2. 'papers' bucket (public, max 20 MB for research manuscripts / PDFs)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('papers', 'papers', true, 20971520, array['application/pdf'])
+on conflict (id) do update
+  set public             = true,
+      file_size_limit    = 20971520,
+      allowed_mime_types = array['application/pdf'];
+
+-- RLS policies for storage objects (public read for both buckets)
 do $$
 begin
   if not exists (
@@ -303,6 +315,15 @@ begin
   ) then
     create policy "Public read covers" on storage.objects
       for select using (bucket_id = 'covers');
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname = 'Public read papers'
+  ) then
+    create policy "Public read papers" on storage.objects
+      for select using (bucket_id = 'papers');
   end if;
 end $$;
 
