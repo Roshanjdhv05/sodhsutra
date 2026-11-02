@@ -209,9 +209,9 @@ function PaperForm({ row, data, onSave, onClose }) {
       keywords: prev.keywords?.trim() ? prev.keywords : (Array.isArray(extracted.keywords) ? extracted.keywords.join(', ') : (extracted.keywords || prev.keywords || '')),
       _extracted_full_text: extracted.full_text || '',
       _extracted_refs: extracted.refs || [],
-      // Auto-fill page numbers if not already set
-      page_start: prev.page_start || (extracted.pageStart ? String(extracted.pageStart) : ''),
-      page_end: prev.page_end || (extracted.pageEnd ? String(extracted.pageEnd) : ''),
+      // Auto-fill page numbers directly from extracted PDF footer/header
+      page_start: extracted.pageStart ? String(extracted.pageStart) : (prev.page_start || '1'),
+      page_end: extracted.pageEnd ? String(extracted.pageEnd) : (prev.page_end || '1'),
     }));
   };
 

@@ -39,18 +39,20 @@ export function Toc({ secs, title = 'Contents' }) {
  *   meta — { authorNames[], year, title, journal, volume, issue, pages, doi, defaultStyle }
  */
 export function CiteBox({ base, meta }) {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(meta?.url || '');
   const [activeStyle, setActiveStyle] = useState(meta?.defaultStyle || 'apa');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.location.href) {
       setUrl(window.location.href);
+    } else if (meta?.url) {
+      setUrl(meta.url);
     }
     if (meta?.defaultStyle) {
       setActiveStyle(meta.defaultStyle);
     }
-  }, [meta?.defaultStyle]);
+  }, [meta?.defaultStyle, meta?.url]);
 
   // Build citation for the active style
   const citationRaw = formatCitation({

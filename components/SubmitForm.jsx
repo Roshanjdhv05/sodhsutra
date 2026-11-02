@@ -35,6 +35,18 @@ export default function SubmitForm({ categories }) {
 
   const wc = words(f.abstract);
 
+  const handlePdfExtracted = (extracted) => {
+    if (!extracted) return;
+    setF((prev) => ({
+      ...prev,
+      title: prev.title?.trim() ? prev.title : (extracted.title || prev.title || ''),
+      abstract: prev.abstract?.trim() ? prev.abstract : (extracted.abstract || prev.abstract || ''),
+      keywords: prev.keywords?.trim() ? prev.keywords : (Array.isArray(extracted.keywords) ? extracted.keywords.join(', ') : (extracted.keywords || prev.keywords || '')),
+      authorName: prev.authorName?.trim() ? prev.authorName : (extracted.authors?.[0]?.name || prev.authorName || ''),
+      institution: prev.institution?.trim() ? prev.institution : (extracted.authors?.[0]?.institution || prev.institution || ''),
+    }));
+  };
+
   function validate() {
     const e = {};
     if (f.title.trim().length < 10) e.title = 'Enter a title of at least 10 characters.';
@@ -148,6 +160,7 @@ export default function SubmitForm({ categories }) {
             label="Manuscript PDF *"
             value={f.pdfUrl}
             onChange={(u) => { set('pdfUrl', u); if (u) setErrs((ex) => ({ ...ex, pdfUrl: undefined })); }}
+            onExtracted={handlePdfExtracted}
           />
           {errs.pdfUrl ? <p className="err" role="alert">{errs.pdfUrl}</p> : null}
         </div>

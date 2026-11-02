@@ -191,16 +191,36 @@ export async function savePaper(p) {
   const validStyles = ['apa', 'ieee', 'mla', 'harvard', 'chicago', 'vancouver'];
   const citation_style = validStyles.includes(p.citation_style) ? p.citation_style : 'apa';
 
+  let page_start = p.page_start ? int(p.page_start) || null : null;
+  let page_end = p.page_end ? int(p.page_end) || null : null;
+
+  // Auto-detect page numbers from PDF footer if not manually entered
+  const paper_url = nul(p.paper_url, 800);
+  if (!page_start && paper_url) {
+    try {
+      const resp = await fetch(paper_url);
+      if (resp.ok) {
+        const buf = Buffer.from(await resp.arrayBuffer());
+        const { extractPaperFromPdfBuffer } = await import('@/lib/pdf-extract');
+        const ext = await extractPaperFromPdfBuffer(buf, 'manuscript.pdf');
+        if (ext?.pageStart) {
+          page_start = ext.pageStart;
+          page_end = ext.pageEnd || ext.pageStart;
+        }
+      }
+    } catch { /* best effort */ }
+  }
+
   const row = {
     title, abstract: s(p.abstract), category_slug, category2_slug: nul(p.category2_slug, 80) === category_slug ? null : nul(p.category2_slug, 80),
     institution, published_on: s(p.published_on, 10), keywords: list(p.keywords).slice(0, 12), views: Math.max(0, int(p.views)),
     content_type: s(p.content_type, 120) || 'Original Research Articles', format: ['emp', 'rev', 'ess', 'cas'].includes(p.format) ? p.format : 'emp',
-    featured: !!p.featured, doi: nul(p.doi, 120), paper_url: nul(p.paper_url, 800), peer_reviewed: !!p.peer_reviewed, is_demo: !!p.is_demo,
+    featured: !!p.featured, doi: nul(p.doi, 120), paper_url, peer_reviewed: !!p.peer_reviewed, is_demo: !!p.is_demo,
     cover_url: nul(p.cover_url, 600), art_style: ((int(p.art_style) % 8) + 8) % 8, art_theme: ((int(p.art_theme) % 6) + 6) % 6, art_seed: Math.max(1, int(p.art_seed, 1)),
     full_text: s(p.full_text, 60000), refs: s(p.refs_text, 12000).split('\n').map((x) => x.trim()).filter(Boolean),
     citation_style,
-    page_start: p.page_start ? int(p.page_start) || null : null,
-    page_end: p.page_end ? int(p.page_end) || null : null,
+    page_start,
+    page_end,
   };
 
   let id = p.id;

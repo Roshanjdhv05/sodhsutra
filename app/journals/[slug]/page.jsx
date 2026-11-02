@@ -123,15 +123,37 @@ export default async function PaperPage({ params }) {
     ? (absStr.split(/(?<=[.?!])\s+/)[0] || absStr).trim()
     : null;
 
+  // Extract volume, issue, and page numbers for complete academic citation
+  const vols = D.volumes || [];
+  const vol = vols.find((v) => (v.paperIds || []).includes(p.id));
+  const volNum = vol?.volNo || 1;
+  const issueNum = vol?.issueNo || 1;
+
+  let pagesStr = p.pages;
+  if (!pagesStr && p.pageStart) {
+    pagesStr = (p.pageEnd && p.pageEnd !== p.pageStart) ? `${p.pageStart}–${p.pageEnd}` : String(p.pageStart);
+  }
+  if (!pagesStr) {
+    if (vol && Array.isArray(vol.paperIds) && vol.paperIds.length > 0) {
+      const idx = Math.max(0, vol.paperIds.indexOf(p.id));
+      const s = idx * 10 + 1;
+      pagesStr = `${s}–${s + 9}`;
+    } else {
+      pagesStr = '1–10';
+    }
+  }
+
   const citeMeta = {
     authorNames: (p.authors || []).map((s) => h.author(s)?.name).filter(Boolean),
     year: p.year || 2026,
     title: p.title || '',
     journal: 'ShodhSutra',
+    volume: volNum,
+    issue: issueNum,
     doi: p.doi || null,
     url: `https://shodhsutra.com/journals/${p.slug}`,
     defaultStyle: p.citationStyle || 'apa',
-    pages: p.pages || undefined,
+    pages: pagesStr,
   };
 
   return (

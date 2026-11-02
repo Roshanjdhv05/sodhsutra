@@ -355,10 +355,6 @@ export default function JournalLibrary({ data }) {
                     <dd>Issue {activeVolume.issueNo || 1}</dd>
                   </div>
                   <div className="book-reader-detail-item">
-                    <dt>Articles Included:</dt>
-                    <dd>{volumePapers.length} Papers</dd>
-                  </div>
-                  <div className="book-reader-detail-item">
                     <dt>Peer Review:</dt>
                     <dd>Double-Blind Verified</dd>
                   </div>
@@ -518,75 +514,6 @@ export default function JournalLibrary({ data }) {
                     </div>
                   );
                 })()}
-
-                {/* Included Articles (if any) */}
-                {volumePapers.length > 0 && (
-                  <div style={{ marginTop: '28px', borderTop: '2px solid var(--line)', paddingTop: '20px' }}>
-                    <div className="book-reader-right-head">
-                      <div>
-                        <h3>Articles in this Issue</h3>
-                        <p className="muted" style={{ margin: 0, fontSize: '0.86rem' }}>
-                          Showing {volumePapers.length} {volumePapers.length === 1 ? 'paper' : 'papers'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="book-papers-list">
-                      {volumePapers.map((paper, idx) => {
-                        const cat = h.cat(paper.cat);
-                        return (
-                          <article key={paper.id} className="book-paper-row-item">
-                            <div className="book-paper-row-top">
-                              <span className="chip">{cat.short || cat.name}</span>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--mut)' }}>
-                                Article #{idx + 1} · {h.fmt(paper.date)}
-                              </span>
-                            </div>
-                            <h4 className="book-paper-row-title">
-                              <Link href={`/journals/${paper.slug}`}>
-                                {paper.title}
-                              </Link>
-                            </h4>
-                            <p className="book-paper-row-authors">
-                              <Icon name="user" size={14} style={{ verticalAlign: '-2px', marginRight: '4px' }} />
-                              {h.authorNames(paper)}
-                              {paper.inst ? ` · ${paper.inst}` : ''}
-                            </p>
-                            <p className="book-paper-row-abstract">
-                              {paper.abstract}
-                            </p>
-                            <div className="book-paper-row-actions">
-                              <Link href={`/journals/${paper.slug}`} className="btn btn-primary btn-sm">
-                                <Icon name="book" size={15} /> Read Full Paper
-                              </Link>
-                              {paper.paperUrl && (
-                                <a
-                                  href={paper.paperUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="btn btn-ghost btn-sm"
-                                >
-                                  <Icon name="link" size={15} /> Open Manuscript ↗
-                                </a>
-                              )}
-                              {paper.doi && (
-                                <a
-                                  href={`https://doi.org/${paper.doi}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="read-link"
-                                  style={{ fontSize: '0.82rem' }}
-                                >
-                                  DOI: {paper.doi}
-                                </a>
-                              )}
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </section>
             </div>
           </div>
