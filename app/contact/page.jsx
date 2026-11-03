@@ -2,7 +2,10 @@ import { PageHead, DemoNote } from '@/components/ui';
 import { Icon } from '@/components/Icon';
 import ContactForm from '@/components/ContactForm';
 
-export const metadata = { title: 'Contact' };
+export const metadata = {
+  title: 'Contact',
+  alternates: { canonical: 'https://shodhsutra.in/contact' },
+};
 
 export default function ContactPage() {
   return (

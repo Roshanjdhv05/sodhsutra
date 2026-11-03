@@ -5,6 +5,7 @@ import JournalLibrary from '@/components/JournalLibrary';
 export const metadata = {
   title: 'Issues & Volumes',
   description: 'Explore peer-reviewed issues and quarterly volumes by academic year. Open any issue to inspect and read published research articles.',
+  alternates: { canonical: 'https://shodhsutra.in/journals' },
 };
 
 export default async function JournalsPage() {

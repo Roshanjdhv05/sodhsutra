@@ -4,6 +4,7 @@ import StaticPage from '@/components/StaticPage';
 export const metadata = {
   title: 'Submission Guidelines',
   description: 'General guidelines for authors, manuscript structure, and formatting requirements for submitting to ShodhSutra.',
+  alternates: { canonical: 'https://shodhsutra.in/submission-guidelines' },
 };
 
 export default function Guidelines() {

@@ -1,7 +1,10 @@
 import { getAll } from '@/lib/data';
 import { PageHead, AuthorCard, SetupNotice } from '@/components/ui';
 
-export const metadata = { title: 'Authors' };
+export const metadata = {
+  title: 'Authors',
+  alternates: { canonical: 'https://shodhsutra.in/authors' },
+};
 
 export default async function AuthorsPage() {
   const D = await getAll();

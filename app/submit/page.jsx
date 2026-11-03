@@ -6,6 +6,7 @@ import { getAll } from '@/lib/data';
 export const metadata = {
   title: 'Submit Your Research Paper',
   description: 'Submit your original research paper, scholarly article, or review paper for editorial consideration in ShodhSutra.',
+  alternates: { canonical: 'https://shodhsutra.in/submit' },
 };
 
 export default async function SubmitPage() {

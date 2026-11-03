@@ -4,6 +4,7 @@ import { SITE_URL as SITE } from '@/lib/site';
 /** Static public pages with their change frequencies and priorities */
 const STATIC_PAGES = [
   { path: '/', changeFrequency: 'daily', priority: 1.0 },
+  { path: '/journals', changeFrequency: 'daily', priority: 0.9 },
   { path: '/published-papers', changeFrequency: 'daily', priority: 0.9 },
   { path: '/authors', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/student-research', changeFrequency: 'weekly', priority: 0.7 },

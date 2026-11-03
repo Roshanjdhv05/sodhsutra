@@ -1,6 +1,9 @@
 import StaticPage, { Ph } from '@/components/StaticPage';
 
-export const metadata = { title: 'Editorial policies' };
+export const metadata = {
+  title: 'Editorial policies',
+  alternates: { canonical: 'https://shodhsutra.in/editorial-policy' },
+};
 
 export default function EditorialPolicy() {
   return (

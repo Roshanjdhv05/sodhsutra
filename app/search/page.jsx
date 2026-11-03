@@ -2,7 +2,10 @@ import { getAll, slim } from '@/lib/data';
 import { PageHead, SetupNotice } from '@/components/ui';
 import SearchClient from '@/components/SearchClient';
 
-export const metadata = { title: 'Search' };
+export const metadata = {
+  title: 'Search',
+  alternates: { canonical: 'https://shodhsutra.in/search' },
+};
 
 export default async function SearchPage({ searchParams }) {
   const sp = (await searchParams) || {};
