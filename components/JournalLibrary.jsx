@@ -6,31 +6,11 @@ import { Icon } from './Icon';
 import { CoverArt } from './ui';
 import { makeHelpers } from '@/lib/helpers';
 
-function parsePeopleList(text) {
-  if (!text) return [];
-  const blocks = text.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
-  return blocks.map((block) => {
-    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
-    if (lines.length === 1 && lines[0].includes(' — ')) {
-      const [name, ...rest] = lines[0].split(' — ');
-      return { name: name.trim(), role: rest.join(' — ').trim() };
-    }
-    if (lines.length === 1 && lines[0].includes(' - ')) {
-      const [name, ...rest] = lines[0].split(' - ');
-      return { name: name.trim(), role: rest.join(' - ').trim() };
-    }
-    const name = lines[0] || '';
-    const role = lines.slice(1).join(', ') || '';
-    return { name, role };
-  });
-}
-
 export default function JournalLibrary({ data }) {
   const searchParams = useSearchParams();
   const h = useMemo(() => makeHelpers(data), [data]);
   const [selectedYear, setSelectedYear] = useState('all');
   const [activeVolume, setActiveVolume] = useState(null);
-  const [paperQuery, setPaperQuery] = useState('');
 
   // Extract all distinct academic years from volumes
   const allYears = useMemo(() => {
@@ -81,7 +61,6 @@ export default function JournalLibrary({ data }) {
 
   const openBook = (vol) => {
     setActiveVolume(vol);
-    setPaperQuery('');
     if (typeof window !== 'undefined') {
       const u = new URL(window.location.href);
       u.searchParams.set('volume', vol.id);
@@ -91,35 +70,12 @@ export default function JournalLibrary({ data }) {
 
   const closeBook = () => {
     setActiveVolume(null);
-    setPaperQuery('');
     if (typeof window !== 'undefined') {
       const u = new URL(window.location.href);
       u.searchParams.delete('volume');
       window.history.replaceState(null, '', u.toString());
     }
   };
-
-  // Find papers for the currently opened volume
-  const volumePapers = useMemo(() => {
-    if (!activeVolume) return [];
-    const ids = activeVolume.paperIds || [];
-    let list = ids
-      .map((id) => data.papers.find((p) => p.id === id))
-      .filter(Boolean);
-
-    // If no papers explicitly mapped, show all papers as fallback
-    if (!list.length && data.papers.length > 0) {
-      list = data.papers.slice(0, 4);
-    }
-
-    if (!paperQuery.trim()) return list;
-    const q = paperQuery.toLowerCase();
-    return list.filter((p) =>
-      p.title.toLowerCase().includes(q) ||
-      (p.abstract || '').toLowerCase().includes(q) ||
-      h.authorNames(p).toLowerCase().includes(q)
-    );
-  }, [activeVolume, data.papers, paperQuery, h]);
 
   const displayedYears = selectedYear === 'all' ? allYears : [selectedYear];
   const totalVolumes = (data.volumes || []).length;
@@ -141,7 +97,7 @@ export default function JournalLibrary({ data }) {
             <h1>Issues &amp; Volumes</h1>
             <p className="lede">
               Explore ShodhSutra’s official peer-reviewed issues presented as interactive books.
-              Select any issue below to open the book and read all published research articles.
+              Select any issue below to directly read its published manuscript PDF.
             </p>
             <div className="journal-stats-row">
               <span className="journal-stat-chip">
@@ -199,14 +155,13 @@ export default function JournalLibrary({ data }) {
                   </span>
                 </div>
                 <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
-                  Click on any journal book cover to open and read its articles
+                  Click on any journal book cover to directly open and read its manuscript PDF
                 </p>
               </div>
 
               {/* 3D Journal Books Grid */}
               <div className="journal-books-grid">
                 {issues.map((vol) => {
-                  const paperCount = vol.paperIds ? vol.paperIds.length : 0;
                   return (
                     <article
                       key={vol.id}
@@ -242,10 +197,10 @@ export default function JournalLibrary({ data }) {
                           </div>
                           <div className="journal-book-foot">
                             <span className="journal-book-count-badge">
-                              {paperCount} {paperCount === 1 ? 'Paper' : 'Papers'}
+                              Full Issue PDF
                             </span>
                             <span className="journal-book-open-hint">
-                              Open Book <Icon name="arrow" size={12} />
+                              Open PDF <Icon name="arrow" size={12} />
                             </span>
                           </div>
                         </div>
@@ -258,7 +213,7 @@ export default function JournalLibrary({ data }) {
                           <div className="journal-book-period-sub">{vol.period}</div>
                         )}
                         <span className="journal-book-papers-badge">
-                          <Icon name="book" size={13} /> {paperCount} Research {paperCount === 1 ? 'Paper' : 'Papers'}
+                          <Icon name="file" size={13} /> Complete Manuscript (PDF)
                         </span>
                       </div>
                     </article>
@@ -271,7 +226,7 @@ export default function JournalLibrary({ data }) {
       </main>
 
       {/* ============================================================
-          Interactive Open Book Reader Modal
+          Interactive Open Book Reader Modal — Direct PDF View
           ============================================================ */}
       {activeVolume && (
         <div
@@ -294,19 +249,33 @@ export default function JournalLibrary({ data }) {
                 <span style={{ opacity: 0.5 }}>/</span>
                 <span>{activeVolume.name}</span>
               </div>
-              <button
-                type="button"
-                className="book-reader-close-btn"
-                onClick={closeBook}
-                aria-label="Close Book"
-              >
-                <Icon name="x" size={16} /> Close Book
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {activeVolume.pdfUrl && (
+                  <a
+                    href={activeVolume.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-ghost btn-sm"
+                    style={{ fontSize: '0.82rem', gap: '6px' }}
+                    title="Open PDF in new tab"
+                  >
+                    <Icon name="link" size={14} /> Fullscreen / New Tab ↗
+                  </a>
+                )}
+                <button
+                  type="button"
+                  className="book-reader-close-btn"
+                  onClick={closeBook}
+                  aria-label="Close Book"
+                >
+                  <Icon name="x" size={16} /> Close Book
+                </button>
+              </div>
             </div>
 
-            {/* Split Page Layout (Left: Cover & Info, Right: Included Papers) */}
+            {/* Split Page Layout (Left: Cover & Info, Right: Direct PDF Viewer) */}
             <div className="book-reader-layout">
-              {/* Left Page */}
+              {/* Left Page: Volume Information */}
               <aside className="book-reader-left">
                 <div className={`book-reader-cover-preview ${activeVolume.cover ? 'has-cover-image' : ''}`.trim()}>
                   <div className="journal-book-art-bg" aria-hidden="true">
@@ -361,7 +330,7 @@ export default function JournalLibrary({ data }) {
                 </dl>
 
                 {activeVolume.pdfUrl ? (
-                  <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                     <a
                       href={activeVolume.pdfUrl}
                       target="_blank"
@@ -369,7 +338,7 @@ export default function JournalLibrary({ data }) {
                       className="btn btn-primary"
                       style={{ width: '100%', justifyContent: 'center', gap: '8px', fontSize: '0.9rem' }}
                     >
-                      <Icon name="link" size={15} /> Open Manuscript (PDF) ↗
+                      <Icon name="link" size={15} /> Open in new tab ↗
                     </a>
                     <a
                       href={activeVolume.pdfUrl}
@@ -383,137 +352,64 @@ export default function JournalLibrary({ data }) {
                 ) : null}
               </aside>
 
-              {/* Right Page */}
+              {/* Right Page: Direct Full Manuscript PDF Viewer */}
               <section className="book-reader-right">
-                {/* PDF Link and Download Bar */}
                 {activeVolume.pdfUrl ? (
-                  <div className="book-reader-pdf-bar">
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                        <span className="pill ok" style={{ fontSize: '0.75rem' }}>Full Issue Manuscript</span>
-                        <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--ink)' }}>{activeVolume.name}</span>
+                  <div className="book-reader-pdf-view-wrap">
+                    <div className="book-reader-pdf-toolbar">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="pill ok" style={{ fontSize: '0.75rem' }}>Manuscript PDF</span>
+                        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--ink)' }}>
+                          {activeVolume.name}
+                        </span>
                       </div>
-                      <div style={{ fontSize: '0.82rem', color: 'var(--mut)' }}>
-                        Official issue publication available to view or download.
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <a
+                          href={activeVolume.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-primary btn-sm"
+                          style={{ gap: '6px' }}
+                        >
+                          <Icon name="link" size={13} /> Open in new tab ↗
+                        </a>
+                        <a
+                          href={activeVolume.pdfUrl}
+                          download
+                          className="btn btn-ghost btn-sm"
+                          style={{ gap: '6px' }}
+                        >
+                          <Icon name="file" size={13} /> Download PDF ⤓
+                        </a>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <a href={activeVolume.pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">
-                        <Icon name="link" size={14} /> Open PDF ↗
-                      </a>
-                      <a href={activeVolume.pdfUrl} download className="btn btn-ghost btn-sm">
-                        <Icon name="file" size={14} /> Download PDF
-                      </a>
+                    <div className="book-reader-iframe-frame">
+                      <iframe
+                        src={`${activeVolume.pdfUrl}#toolbar=1`}
+                        title={`${activeVolume.name} - Full Issue PDF`}
+                        width="100%"
+                        height="100%"
+                        className="book-reader-pdf-iframe"
+                        allowFullScreen
+                      />
                     </div>
                   </div>
-                ) : null}
-
-                {/* Governance & Editorial Boards */}
-                {(() => {
-                  const patronsList = parsePeopleList(activeVolume.patrons);
-                  const advisoryList = parsePeopleList(activeVolume.advisoryBoard);
-                  const membersList = parsePeopleList(activeVolume.editorialMembers);
-                  const reviewerList = parsePeopleList(activeVolume.reviewerCommittee);
-                  return (
-                    <div className="vol-boards-wrap">
-                      {/* Patrons */}
-                      {patronsList.length > 0 && (
-                        <div className="vol-board-card">
-                          <h3 className="vol-board-title">PATRONS</h3>
-                          <div className="vol-board-grid">
-                            {patronsList.map((p, idx) => (
-                              <div key={idx} className="vol-person-item">
-                                <div className="vol-person-name">{p.name}</div>
-                                {p.role && <div className="vol-person-role">{p.role}</div>}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Advisory Board */}
-                      {advisoryList.length > 0 && (
-                        <div className="vol-board-card">
-                          <h3 className="vol-board-title">ADVISORY BOARD</h3>
-                          <div className="vol-board-grid">
-                            {advisoryList.map((p, idx) => (
-                              <div key={idx} className="vol-person-item">
-                                <div className="vol-person-name">{p.name}</div>
-                                {p.role && <div className="vol-person-role">{p.role}</div>}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Editorial Board */}
-                      <div className="vol-board-card">
-                        <h3 className="vol-board-title">EDITORIAL BOARD</h3>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '14px' }}>
-                          {activeVolume.editorInChief && (
-                            <div className="vol-key-person-box">
-                              <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--o)' }}>
-                                EDITOR-IN-CHIEF
-                              </span>
-                              <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', marginTop: '4px' }}>
-                                {activeVolume.editorInChief.split('\n')[0]}
-                              </div>
-                              <div style={{ fontSize: '0.85rem', color: 'var(--mut)', marginTop: '2px' }}>
-                                {activeVolume.editorInChief.split('\n').slice(1).join(', ')}
-                              </div>
-                            </div>
-                          )}
-
-                          {activeVolume.managingEditor && (
-                            <div className="vol-key-person-box">
-                              <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--o)' }}>
-                                MANAGING EDITOR
-                              </span>
-                              <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', marginTop: '4px' }}>
-                                {activeVolume.managingEditor.split('\n')[0]}
-                              </div>
-                              <div style={{ fontSize: '0.85rem', color: 'var(--mut)', marginTop: '2px' }}>
-                                {activeVolume.managingEditor.split('\n').slice(1).join(', ')}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {membersList.length > 0 && (
-                          <div>
-                            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--ink)', margin: '14px 0 10px', letterSpacing: '0.04em' }}>
-                              MEMBERS
-                            </h4>
-                            <div className="vol-board-grid">
-                              {membersList.map((p, idx) => (
-                                <div key={idx} className="vol-person-item">
-                                  <div className="vol-person-name">{p.name}</div>
-                                  {p.role && <div className="vol-person-role">{p.role}</div>}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                ) : (
+                  <div className="book-reader-no-pdf">
+                    <div className="book-reader-no-pdf-card">
+                      <div className="book-reader-no-pdf-icon">
+                        <Icon name="file" size={36} />
                       </div>
-
-                      {/* Reviewer Committee */}
-                      {reviewerList.length > 0 && (
-                        <div className="vol-board-card">
-                          <h3 className="vol-board-title">REVIEWER COMMITTEE</h3>
-                          <div className="vol-board-grid">
-                            {reviewerList.map((p, idx) => (
-                              <div key={idx} className="vol-person-item">
-                                <div className="vol-person-name">{p.name}</div>
-                                {p.role && <div className="vol-person-role">{p.role}</div>}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      <h4 style={{ fontFamily: 'var(--serif)', fontSize: '1.25rem', color: 'var(--ink)', margin: '14px 0 6px' }}>
+                        Manuscript PDF Not Available
+                      </h4>
+                      <p style={{ fontSize: '0.88rem', color: 'var(--mut)', lineHeight: 1.6, margin: '0 0 16px' }}>
+                        The complete issue manuscript PDF has not been uploaded yet for <strong>{activeVolume.name}</strong>.
+                      </p>
+                      <span className="pill warn">Awaiting PDF Upload</span>
                     </div>
-                  );
-                })()}
+                  </div>
+                )}
               </section>
             </div>
           </div>
