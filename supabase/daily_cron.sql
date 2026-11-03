@@ -21,3 +21,4 @@ SELECT cron.schedule(
 
 -- 3. (Optional) Check existing cron jobs
 -- SELECT * FROM cron.job;
+

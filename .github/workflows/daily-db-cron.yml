@@ -25,3 +25,4 @@ jobs:
             # Don't fail the workflow if domain DNS is still propagating
             exit 0
           fi
+

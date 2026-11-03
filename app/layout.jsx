@@ -11,6 +11,9 @@ export const metadata = {
   description: `${BRAND} — a multidisciplinary research journal platform for students, teachers and independent researchers.`,
   metadataBase: new URL('https://shodhsutra.in'),
   alternates: { canonical: '/' },
+  verification: {
+    google: '9VV_pT2oAfecBEMifa27tp3KoTmGLKGFt41mBqzmqlM',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '32x32' },
