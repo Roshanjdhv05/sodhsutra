@@ -533,7 +533,7 @@ function VolumeForm({ row, data, onSave, onClose }) {
   const [f, setF] = useState(() => ({
     name: 'Volume 1 - Issue 1',
     year_label: '2026- 2027',
-    period_label: 'July- September 2026',
+    period_label: 'June–August 2026',
     volume_no: 1,
     issue_no: 1,
     cover_url: '',
@@ -578,7 +578,7 @@ function VolumeForm({ row, data, onSave, onClose }) {
       <div className="formgrid c2">
         <div className="full" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
           <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--mut)', alignSelf: 'center' }}>Quick Presets:</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 1, 'Volume 1 - Issue 1', 'July- September 2026')}>Vol 1 · Issue 1 (Jul-Sep)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 1, 'Volume 1 - Issue 1', 'June–August 2026')}>Vol 1 · Issue 1 (Jun–Aug)</button>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 2, 'Volume 1 - Issue 2', 'October - December 2026')}>Vol 1 · Issue 2 (Oct-Dec)</button>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 3, 'Volume 1 - Issue 3', 'January - March 2027')}>Vol 1 · Issue 3 (Jan-Mar)</button>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => applyPreset(1, 4, 'Volume 1 - Issue 4', 'April - June 2027')}>Vol 1 · Issue 4 (Apr-Jun)</button>
@@ -590,7 +590,7 @@ function VolumeForm({ row, data, onSave, onClose }) {
         <F id="v-year" label="Academic Year *" hint="e.g. 2026- 2027">
           <input id="v-year" className="input" value={f.year_label} onChange={(e) => set('year_label', e.target.value)} required />
         </F>
-        <F id="v-period" label="Period / Quarter" hint="e.g. July- September 2026">
+        <F id="v-period" label="Period / Quarter" hint="e.g. June–August 2026">
           <input id="v-period" className="input" value={f.period_label} onChange={(e) => set('period_label', e.target.value)} />
         </F>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

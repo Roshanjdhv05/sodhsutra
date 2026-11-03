@@ -197,7 +197,7 @@ create table public.journal_volumes (
   id           uuid    primary key default gen_random_uuid(),
   name         text    not null,            -- e.g. "Volume 1 - Issue 1"
   year_label   text    not null,            -- e.g. "2026-2027"
-  period_label text    not null default '', -- e.g. "July-September 2026"
+  period_label text    not null default '', -- e.g. "June–August 2026"
   volume_no    int     not null default 1,
   issue_no     int     not null default 1,
   cover_url    text,                        -- cover image URL
@@ -358,7 +358,7 @@ on conflict (slug) do nothing;
 -- ============================================================================
 insert into public.journal_volumes (name, year_label, period_label, volume_no, issue_no, art_style, art_theme, art_seed, description, published)
 values
-  ('Volume 1 - Issue 1', '2026-2027', 'June - August 2026',     1, 1, 0, 0, 101, '{}', true),
+  ('Volume 1 - Issue 1', '2026-2027', 'June–August 2026',      1, 1, 0, 0, 101, '{}', true),
   ('Volume 1 - Issue 2', '2026-2027', 'October - December 2026',1, 2, 0, 0, 102, '{}', true),
   ('Volume 1 - Issue 3', '2026-2027', 'January - March 2027',   1, 3, 0, 0, 103, '{}', true),
   ('Volume 1 - Issue 4', '2026-2027', 'April - June 2027',      1, 4, 0, 0, 104, '{}', true)

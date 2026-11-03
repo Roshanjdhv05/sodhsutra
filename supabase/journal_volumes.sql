@@ -85,7 +85,7 @@ create policy "public read volume_papers"
 -- ----------------------------------------------------------------
 insert into public.journal_volumes (name, year_label, period_label, volume_no, issue_no, art_style, art_theme, art_seed, description)
 values
-  ('Volume 1 - Issue 1', '2026- 2027', 'July- September 2026',   1, 1, 0, 0, 101, 'Quarterly research issue covering Science, Technology and Humanities.'),
+  ('Volume 1 - Issue 1', '2026- 2027', 'June–August 2026',       1, 1, 0, 0, 101, 'Quarterly research issue covering Science, Technology and Humanities.'),
   ('Volume 1 - Issue 2', '2026- 2027', 'October - December 2026', 1, 2, 2, 1, 102, 'Quarterly research issue covering Science, Technology and Humanities.'),
   ('Volume 1 - Issue 3', '2026- 2027', 'January - March 2027',    1, 3, 4, 2, 103, 'Quarterly research issue covering Science, Technology and Humanities.'),
   ('Volume 1 - Issue 4', '2026- 2027', 'April - June 2027',       1, 4, 6, 3, 104, 'Quarterly research issue covering Science, Technology and Humanities.')
