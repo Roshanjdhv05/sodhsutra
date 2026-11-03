@@ -12,7 +12,7 @@ export default function ContactPage() {
         <div>
           <h2>Contact details</h2>
           <ul className="clist">
-            <li><Icon name="mail" size={18} /> <span>contact@shodhsutra.example <small>(placeholder address)</small></span></li>
+            <li><Icon name="mail" size={18} /> <span>shodh.sutra@mccmulund.ac.in</span></li>
             <li><Icon name="building" size={18} /> <span>Editorial office — address to be added</span></li>
             <li><Icon name="globe" size={18} /> <span>Response times to be confirmed</span></li>
           </ul>
