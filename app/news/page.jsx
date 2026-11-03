@@ -2,7 +2,7 @@ import { getAll, slim } from '@/lib/data';
 import { PageHead, SetupNotice } from '@/components/ui';
 import NewsClient from '@/components/NewsClient';
 
-export const metadata = { title: 'Research News', alternates: { canonical: 'https://shodhsutra.com/news' } };
+export const metadata = { title: 'Research News', alternates: { canonical: 'https://shodhsutra.in/news' } };
 
 export default async function NewsPage({ searchParams }) {
   const sp = (await searchParams) || {};

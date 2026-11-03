@@ -5,7 +5,7 @@ import JournalsClient from '@/components/JournalsClient';
 export const metadata = {
   title: 'Articles',
   description: 'Browse all published research articles, filter by theme, author type, or publication year.',
-  alternates: { canonical: 'https://shodhsutra.com/published-papers' },
+  alternates: { canonical: 'https://shodhsutra.in/published-papers' },
 };
 
 export default async function PublishedPapersPage({ searchParams }) {

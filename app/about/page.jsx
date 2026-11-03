@@ -4,7 +4,7 @@ import StaticPage from '@/components/StaticPage';
 export const metadata = {
   title: 'About ShodhSutra',
   description: 'A Multi Disciplinary Research Journal initiated to create a platform for young researchers, faculty, and scholars to showcase their research skills.',
-  alternates: { canonical: 'https://shodhsutra.com/about' },
+  alternates: { canonical: 'https://shodhsutra.in/about' },
 };
 
 const PATRONS_LIST = [

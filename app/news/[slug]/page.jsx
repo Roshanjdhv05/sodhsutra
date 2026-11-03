@@ -12,7 +12,7 @@ export async function generateMetadata({ params }) {
   return {
     title: n ? n.title : 'News',
     description: n?.summary,
-    alternates: { canonical: `https://shodhsutra.com/news/${slug}` },
+    alternates: { canonical: `https://shodhsutra.in/news/${slug}` },
   };
 }
 

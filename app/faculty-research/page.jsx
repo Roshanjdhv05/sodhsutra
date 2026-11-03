@@ -5,7 +5,7 @@ import { Icon } from '@/components/Icon';
 import { PageHead, Cover, Avatar, SetupNotice } from '@/components/ui';
 import FacultyFilter from '@/components/FacultyFilter';
 
-export const metadata = { title: 'Faculty Research', alternates: { canonical: 'https://shodhsutra.com/faculty-research' } };
+export const metadata = { title: 'Faculty Research', alternates: { canonical: 'https://shodhsutra.in/faculty-research' } };
 
 export default async function FacultyPage() {
   const D = await getAll();

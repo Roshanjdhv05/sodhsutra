@@ -151,7 +151,7 @@ export default async function PaperPage({ params }) {
     volume: volNum,
     issue: issueNum,
     doi: p.doi || null,
-    url: `https://shodhsutra.com/journals/${p.slug}`,
+    url: `https://shodhsutra.in/journals/${p.slug}`,
     defaultStyle: p.citationStyle || 'apa',
     pages: pagesStr,
   };

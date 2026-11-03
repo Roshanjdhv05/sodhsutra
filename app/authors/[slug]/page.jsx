@@ -10,7 +10,7 @@ export async function generateMetadata({ params }) {
   const a = D.authors.find((x) => x.slug === slug);
   return {
     title: a ? a.name : 'Author',
-    alternates: { canonical: `https://shodhsutra.com/authors/${slug}` },
+    alternates: { canonical: `https://shodhsutra.in/authors/${slug}` },
   };
 }
 
