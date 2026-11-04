@@ -869,7 +869,7 @@ noscript .reveal{opacity:1}
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:clamp(16px,3vw,36px);
+  padding:clamp(10px,2.5vw,36px);
   animation:overlayFadeIn .25s var(--ease);
 }
 @keyframes overlayFadeIn{from{opacity:0}to{opacity:1}}
@@ -893,14 +893,50 @@ noscript .reveal{opacity:1}
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:12px 20px;
+  gap:10px;
+  padding:10px 18px;
   background:var(--o1);
   border-bottom:1px solid var(--line);
   flex-shrink:0;
+  min-height:50px;
 }
-.book-reader-breadcrumbs{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--mut)}
-.book-reader-breadcrumbs span{color:var(--ink);font-weight:600}
-.book-reader-close-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r);background:#fff;border:1px solid var(--line);font:600 .85rem var(--sans);color:var(--ink);cursor:pointer;transition:all .2s}
+.book-reader-breadcrumbs{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:.85rem;
+  color:var(--mut);
+  min-width:0;
+  overflow:hidden;
+}
+.book-reader-breadcrumbs span{
+  color:var(--ink);
+  font-weight:600;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.book-reader-top-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-shrink:0;
+}
+.book-reader-close-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  border-radius:var(--r);
+  background:#fff;
+  border:1px solid var(--line);
+  font:700 .84rem var(--sans);
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .2s;
+  flex-shrink:0;
+  white-space:nowrap;
+}
 .book-reader-close-btn:hover{background:var(--o);color:#fff;border-color:var(--o)}
 
 .book-reader-layout{
@@ -909,12 +945,6 @@ noscript .reveal{opacity:1}
   flex:1;
   min-height:0;
   overflow:hidden;
-}
-@media(max-width:880px){
-  .book-reader-container{height:94vh;max-height:94vh}
-  .book-reader-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow-y:auto}
-  .book-reader-left{border-right:none;border-bottom:1px solid var(--line);padding:14px}
-  .book-reader-cover-preview{display:none}
 }
 
 /* Left Page: Volume Cover & Information */
@@ -972,6 +1002,64 @@ noscript .reveal{opacity:1}
 .book-reader-detail-item{display:flex;justify-content:space-between;gap:8px}
 .book-reader-detail-item dt{color:var(--mut)}
 .book-reader-detail-item dd{margin:0;font-weight:600;color:var(--ink)}
+
+/* Responsive Mobile Layout for Book Reader */
+@media(max-width:880px){
+  .book-reader-overlay{
+    padding:8px 6px;
+  }
+  .book-reader-container{
+    width:100%;
+    height:96vh;
+    max-height:96vh;
+    border-radius:10px;
+  }
+  .book-reader-top-bar{
+    padding:8px 12px;
+  }
+  .book-reader-layout{
+    grid-template-columns:1fr;
+    grid-template-rows:auto 1fr;
+    overflow-y:auto;
+  }
+  .book-reader-left{
+    border-right:none;
+    border-bottom:1px solid var(--line);
+    padding:12px 14px;
+  }
+  .book-reader-cover-preview,
+  .book-reader-cover-preview.has-cover-image{
+    width:90px !important;
+    height:124px !important;
+    margin-bottom:8px !important;
+    border-radius:4px !important;
+  }
+  .book-reader-vol-name{
+    font-size:1.15rem !important;
+    margin:0 0 4px !important;
+  }
+  .book-reader-period-pill{
+    margin-bottom:6px !important;
+  }
+  .book-reader-desc{
+    display:none; /* saves vertical space so the PDF is immediately visible */
+  }
+  .book-reader-details-list{
+    margin-top:6px;
+    padding-top:6px;
+    gap:4px;
+    font-size:.78rem;
+  }
+  .book-reader-bread-archive{
+    display:none;
+  }
+  .book-reader-newtab-btn .book-reader-btn-label{
+    display:none;
+  }
+  .book-reader-newtab-btn{
+    padding:5px 8px;
+  }
+}
 
 /* Right Page: Direct Full Manuscript PDF Viewer */
 .book-reader-right{

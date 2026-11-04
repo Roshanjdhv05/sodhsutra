@@ -242,24 +242,20 @@ export default function JournalLibrary({ data }) {
             {/* Top Bar Navigation */}
             <div className="book-reader-top-bar">
               <div className="book-reader-breadcrumbs">
-                <Icon name="book" size={18} />
-                <span>Academic Archive</span>
-                <span style={{ opacity: 0.5 }}>/</span>
-                <span>{activeVolume.year}</span>
-                <span style={{ opacity: 0.5 }}>/</span>
-                <span>{activeVolume.name}</span>
+                <Icon name="book" size={16} />
+                <span className="book-reader-bread-archive">Academic Archive / {activeVolume.year} / </span>
+                <span className="book-reader-bread-name">{activeVolume.name}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className="book-reader-top-actions">
                 {activeVolume.pdfUrl && (
                   <a
                     href={activeVolume.pdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-ghost btn-sm"
-                    style={{ fontSize: '0.82rem', gap: '6px' }}
+                    className="btn btn-ghost btn-sm book-reader-newtab-btn"
                     title="Open PDF in new tab"
                   >
-                    <Icon name="link" size={14} /> Fullscreen / New Tab ↗
+                    <Icon name="link" size={14} /> <span className="book-reader-btn-label">New Tab ↗</span>
                   </a>
                 )}
                 <button
@@ -268,7 +264,7 @@ export default function JournalLibrary({ data }) {
                   onClick={closeBook}
                   aria-label="Close Book"
                 >
-                  <Icon name="x" size={16} /> Close Book
+                  <Icon name="x" size={16} /> <span>Close</span>
                 </button>
               </div>
             </div>
@@ -322,10 +318,6 @@ export default function JournalLibrary({ data }) {
                   <div className="book-reader-detail-item">
                     <dt>Issue Number:</dt>
                     <dd>Issue {activeVolume.issueNo || 1}</dd>
-                  </div>
-                  <div className="book-reader-detail-item">
-                    <dt>Peer Review:</dt>
-                    <dd>Double-Blind Verified</dd>
                   </div>
                 </dl>
 
