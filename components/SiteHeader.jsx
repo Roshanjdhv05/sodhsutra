@@ -49,7 +49,32 @@ export default function SiteHeader({ data }) {
   const qRef = useRef(null);
 
   useEffect(() => { setDrawer(false); setSearchOpen(false); }, [pathname]);
-  useEffect(() => { document.body.classList.toggle('lock', searchOpen || drawer); }, [searchOpen, drawer]);
+
+  useEffect(() => {
+    const isLocked = Boolean(searchOpen || drawer);
+    document.documentElement.classList.toggle('lock', isLocked);
+    document.body.classList.toggle('lock', isLocked);
+
+    if (isLocked) {
+      const preventDefault = (e) => {
+        const drawerEl = document.getElementById('drawer');
+        const overlayEl = document.querySelector('.overlay-panel');
+        if (
+          (drawerEl && drawerEl.contains(e.target)) ||
+          (overlayEl && overlayEl.contains(e.target))
+        ) {
+          return;
+        }
+        if (e.cancelable) e.preventDefault();
+      };
+      document.addEventListener('touchmove', preventDefault, { passive: false });
+      return () => {
+        document.documentElement.classList.remove('lock');
+        document.body.classList.remove('lock');
+        document.removeEventListener('touchmove', preventDefault);
+      };
+    }
+  }, [searchOpen, drawer]);
   useEffect(() => {
     const hd = document.querySelector('.site-header');
     const onS = () => hd && hd.classList.toggle('scrolled', window.scrollY > 8);

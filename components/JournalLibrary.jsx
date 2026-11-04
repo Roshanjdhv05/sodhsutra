@@ -48,12 +48,17 @@ export default function JournalLibrary({ data }) {
 
   // Lock body scroll when book modal is open
   useEffect(() => {
-    document.body.classList.toggle('lock', !!activeVolume);
+    const isLocked = Boolean(activeVolume);
+    document.documentElement.classList.toggle('lock', isLocked);
+    document.body.classList.toggle('lock', isLocked);
+
     const onKey = (e) => {
       if (e.key === 'Escape') setActiveVolume(null);
     };
     window.addEventListener('keydown', onKey);
+
     return () => {
+      document.documentElement.classList.remove('lock');
       document.body.classList.remove('lock');
       window.removeEventListener('keydown', onKey);
     };
