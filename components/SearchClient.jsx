@@ -19,7 +19,7 @@ export default function SearchClient({ data, initialQ = '', initialCat = '' }) {
 
   return (
     <section className="section"><div className="container">
-      <form className="search-box" role="search" onSubmit={(e) => { e.preventDefault(); window.history.replaceState(null, '', '/search' + (qq ? `?q=${encodeURIComponent(qq)}` : '')); }}>
+      <form className="search-box" role="search" onSubmit={(e) => { e.preventDefault(); try { window.history.replaceState(window.history.state, '', '/search' + (qq ? `?q=${encodeURIComponent(qq)}` : '')); } catch {} }}>
         <Icon name="search" /><label className="sr" htmlFor="s-in">Search</label>
         <input id="s-in" type="search" placeholder="Search research papers, authors, topics..." value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
         <button className="btn btn-primary" type="submit">Search</button>

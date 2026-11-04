@@ -31,7 +31,11 @@ export default function JournalsClient({ data, initial }) {
     const u = new URLSearchParams();
     Object.entries(st).forEach(([k, v]) => { if (v && v !== 'latest') u.set(k, v); });
     const path = typeof window !== 'undefined' ? window.location.pathname : '/published-papers';
-    window.history.replaceState(null, '', path + (u.toString() ? '?' + u : ''));
+    if (typeof window !== 'undefined') {
+      try {
+        window.history.replaceState(window.history.state, '', path + (u.toString() ? '?' + u : ''));
+      } catch {}
+    }
   }, [st]);
 
   return (

@@ -1,14 +1,10 @@
 'use client';
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { Icon } from './Icon';
 import { CoverArt } from './ui';
-import { makeHelpers } from '@/lib/helpers';
 
 export default function JournalLibrary({ data }) {
-  const searchParams = useSearchParams();
-  const h = useMemo(() => makeHelpers(data), [data]);
   const [selectedYear, setSelectedYear] = useState('all');
   const [activeVolume, setActiveVolume] = useState(null);
 
@@ -37,14 +33,18 @@ export default function JournalLibrary({ data }) {
     return map;
   }, [data.volumes]);
 
-  // Sync with ?volume= query param if present
+  // Sync with ?volume= query param if present on load
   useEffect(() => {
-    const volId = searchParams.get('volume');
-    if (volId && data.volumes) {
-      const found = data.volumes.find((v) => String(v.id) === volId);
-      if (found) setActiveVolume(found);
-    }
-  }, [searchParams, data.volumes]);
+    if (typeof window === 'undefined') return;
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const volId = p.get('volume');
+      if (volId && data?.volumes) {
+        const found = data.volumes.find((v) => String(v.id) === volId);
+        if (found) setActiveVolume(found);
+      }
+    } catch {}
+  }, [data?.volumes]);
 
   // Lock body scroll when book modal is open
   useEffect(() => {
@@ -62,18 +62,22 @@ export default function JournalLibrary({ data }) {
   const openBook = (vol) => {
     setActiveVolume(vol);
     if (typeof window !== 'undefined') {
-      const u = new URL(window.location.href);
-      u.searchParams.set('volume', vol.id);
-      window.history.replaceState(null, '', u.toString());
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.set('volume', vol.id);
+        window.history.replaceState(window.history.state, '', u.pathname + u.search);
+      } catch {}
     }
   };
 
   const closeBook = () => {
     setActiveVolume(null);
     if (typeof window !== 'undefined') {
-      const u = new URL(window.location.href);
-      u.searchParams.delete('volume');
-      window.history.replaceState(null, '', u.toString());
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.delete('volume');
+        window.history.replaceState(window.history.state, '', u.pathname + (u.search ? u.search : ''));
+      } catch {}
     }
   };
 
