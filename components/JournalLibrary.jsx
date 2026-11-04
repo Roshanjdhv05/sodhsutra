@@ -101,7 +101,7 @@ export default function JournalLibrary({ data }) {
             </p>
             <div className="journal-stats-row">
               <span className="journal-stat-chip">
-                <Icon name="book" size={16} /> <strong>{totalVolumes}</strong> Quarterly Issues
+                <Icon name="book" size={16} /> <strong>{totalVolumes}</strong> Bi-annual {totalVolumes === 1 ? 'Issue' : 'Issues'}
               </span>
               <span className="journal-stat-chip">
                 <Icon name="check" size={16} /> <strong>{totalPapers}</strong> Peer-Reviewed Papers
@@ -307,7 +307,7 @@ export default function JournalLibrary({ data }) {
                 )}
                 <p className="book-reader-desc">
                   {activeVolume.desc ||
-                    'Official quarterly publication of peer-reviewed multidisciplinary academic research.'}
+                    'Official bi-annual publication of peer-reviewed multidisciplinary academic research.'}
                 </p>
 
                 <dl className="book-reader-details-list">
